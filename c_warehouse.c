@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define RECORD_MAX_SIZE 10
-#define RECORD_MAX_LENGTH 1000
+#define RECORD_MAX_LENGTH 200
 
 // define warehouse 
 // primary :W_ID
