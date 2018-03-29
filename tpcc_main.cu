@@ -12,7 +12,6 @@
 #include <cuda_runtime.h>
 
 #include "tpcc_table.h"
-#include "statistics_generator.h"
 
 void load_items();
 void load_warehouses();

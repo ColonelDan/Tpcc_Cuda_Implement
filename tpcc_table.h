@@ -33,15 +33,15 @@
 // primary :W_ID
 struct warehouse
 {	
-	int W_ID ; //warehous id. 		
-	char W_NAME[10] ; // warehouse name.
-	char W_STREET_1[20] ; // address 1.
-	char W_STREET_2[20] ; // address 2.
-	char W_CITY[20]	; // city.
-	char W_STATE[2] ; // state.
-	char W_ZIP[9] ; // zip number.
-	float W_TAX ; // sale tax.
-	float W_YTD ; // year to date balance.
+	long W_ID ; //warehous id. 		
+	char W_NAME[10+1] ; // warehouse name.
+	char W_STREET_1[20+1] ; // address 1.
+	char W_STREET_2[20+1] ; // address 2.
+	char W_CITY[20+1]	; // city.
+	char W_STATE[2+1] ; // state.
+	char W_ZIP[9+1] ; // zip number.
+ 	double W_TAX ; // sale tax.
+	double W_YTD ; // year to date balance.
 };
 
 // define distric
@@ -49,18 +49,18 @@ struct warehouse
 // D_W_ID foreign key. references W_ID
 struct district
 {
-	int D_ID; 
-	int D_W_ID; // reference to warehouse.
-	char D_NAME[10]; 
-	char D_STREET_1[10];
-	char D_STREET_2[20];
-	char D_CITY[20];
-	char D_STATE[2];
-	char D_ZIP[9];
-	float D_TAX;
-	float D_YTD;
+	long D_ID; 
+	long D_W_ID; // reference to warehouse.
+	char D_NAME[10+1]; 
+	char D_STREET_1[10+1];
+	char D_STREET_2[20+1];
+	char D_CITY[20+1];
+	char D_STATE[2+1];
+	char D_ZIP[9+1];
+	double D_TAX;
+	double D_YTD;
 	
-	int D_NEXT_O_ID ; //next order id.
+	long D_NEXT_O_ID ; //next order id.
 };
 
 // define customer
@@ -69,24 +69,24 @@ struct customer
 	long C_ID ; 
 	long C_D_ID ; 
 	long C_W_ID ; 
-	char C_FIRST[16] ;//  first name .
-	char C_MIDDLE[2] ; // middle name.
-	char C_LAST[16] ; // last name.
-	char C_STREET_1[20] ; //
-	char C_STREET_2[20] ; //
-	char C_CITY[20] ; //
-	char C_STATE[2] ;
-	char C_ZIP[9] ;
-	char C_PHONE[16] ;
+	char C_FIRST[16+1] ;//  first name .
+	char C_MIDDLE[2+1] ; // middle name.
+	char C_LAST[16+1] ; // last name.
+	char C_STREET_1[20+1] ; //
+	char C_STREET_2[20+1] ; //
+	char C_CITY[20+1] ; //
+	char C_STATE[2+1] ;
+	char C_ZIP[9+1] ;
+	char C_PHONE[16+1] ;
 	long C_SINCE ;	//register time.
-	char C_CREDIT[2]; // "GC" = good , "BC" = bad
+	char C_CREDIT[2+1]; // "GC" = good , "BC" = bad
 	double C_CREDIT_LIM; //
 	double C_DISCOUNT ; //
 	double C_BALANCE ;
 	double C_YTD_PAYMENT;
 	double C_PAYMENT_CNT;
 	double C_DELIVERY_CNT;
-	char C_DATA[500];	//
+	char C_DATA[500+1];	//
 };
 
 // define table history
@@ -99,7 +99,7 @@ struct history
 	long H_W_ID;
  	long H_DATE;
 	double H_AMOUNT;
-	char H_DATA;
+	char H_DATA[24+1];
 
 };
 
@@ -143,9 +143,9 @@ struct item
 {
 	long I_ID;
 	long I_IM_ID;
-	char I_NAME[25];
+	char I_NAME[25+1];
 	double I_PRICE;
-	char I_DATA[50];
+	char I_DATA[50+1];
 };
 
 // define stock
@@ -154,16 +154,16 @@ struct stock
 	long S_I_ID;
 	long S_W_ID;
 	double S_QUANTITY;
- 	char S_DIST_01[24];
- 	char S_DIST_02[24];
- 	char S_DIST_03[24];
- 	char S_DIST_04[24];
- 	char S_DIST_05[24];
- 	char S_DIST_06[24];
- 	char S_DIST_07[24];
- 	char S_DIST_08[24];
- 	char S_DIST_09[24];
- 	char S_DIST_10[24];
+ 	char S_DIST_01[24+1];
+ 	char S_DIST_02[24+1];
+ 	char S_DIST_03[24+1];
+ 	char S_DIST_04[24+1];
+ 	char S_DIST_05[24+1];
+ 	char S_DIST_06[24+1];
+ 	char S_DIST_07[24+1];
+ 	char S_DIST_08[24+1];
+ 	char S_DIST_09[24+1];
+ 	char S_DIST_10[24+1];
 	double S_YTD;
 	double S_ORDER_CNT;
 	double S_REMOTE_CNT;
