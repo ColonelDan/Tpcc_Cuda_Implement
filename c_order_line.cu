@@ -21,8 +21,8 @@ int get_order_line(struct order_line *p_order_line_arr){ //?????????????????????
     int index=0;
     
     char **record_arr;
-    record_arr=malloc(OL_MAX_SIZE*sizeof(char *));
-    record_arr[index]=malloc(OL_MAX_LENGTH*sizeof(char));
+    record_arr=(char **)malloc(OL_MAX_SIZE*sizeof(char *));
+    record_arr[index]=(char *)malloc(OL_MAX_LENGTH*sizeof(char));
     
     while(1){
       c=fgetc(fp);
@@ -32,7 +32,7 @@ int get_order_line(struct order_line *p_order_line_arr){ //?????????????????????
       if(c=='\n'){
         record_arr[index][i++]='\0';
         index++;
-        record_arr[index]=malloc(OL_MAX_LENGTH*sizeof(char));
+        record_arr[index]=(char *)malloc(OL_MAX_LENGTH*sizeof(char));
         i=0;
       }else{
         if(c!='"'){

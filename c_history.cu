@@ -23,8 +23,8 @@ int get_history(struct history *p_history_arr){ //??????????????????????????????
     int index=0;
     
     char **record_arr;
-    record_arr=malloc(H_MAX_SIZE*sizeof(char *));
-    record_arr[index]=malloc(H_MAX_LENGTH*sizeof(char));
+    record_arr=(char **)malloc(H_MAX_SIZE*sizeof(char *));
+    record_arr[index]=(char *)malloc(H_MAX_LENGTH*sizeof(char));
    	
 //printf("ok\n");
 	 
@@ -36,7 +36,7 @@ int get_history(struct history *p_history_arr){ //??????????????????????????????
       if(c=='\n'){
         record_arr[index][i++]='\0';
         index++;
-        record_arr[index]=malloc(H_MAX_LENGTH*sizeof(char));
+        record_arr[index]=(char *)malloc(H_MAX_LENGTH*sizeof(char));
         i=0;
       }else{
         if(c!='"'){

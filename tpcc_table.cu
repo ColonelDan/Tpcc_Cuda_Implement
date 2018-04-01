@@ -13,8 +13,11 @@
 // output : the slot id or -1 if there is no
 // 	    free slot exists.
 //
+__device__
 int get_free_slot(char *slot_flag_arry, int table_type){
 	int max_num = 0;
+	const int pid = blockIdx.x;
+	const int tid = threadIdx.x;
 	switch(table_type){
 		case(WAREHOUSE):
 			max_num = MAX_WAREHOUSE_NUM;
@@ -41,12 +44,20 @@ int get_free_slot(char *slot_flag_arry, int table_type){
 			max_num = MAX_CUSTOMER_NUM;
 			break;
 	}
-	
+/*	
 	int i ;
-	for(i= 0; i< max_num ; i++)
+	for(i= bid*blockDim.x+tid; i< max_num ; i += gridDim.x*blockDim.x)
 	{	
 		if(slot_flag_arry[i] == 0) 
 			return i;
+	}*/
+	if( pid==0 && tid == 0 ){
+		int i ;
+		for(i=0; i<max_num; i++)
+		{
+			if(slot_flag_arry[i] == 0)
+				return i;
+		}
 	}
 	return -1;
 }
@@ -54,16 +65,23 @@ int get_free_slot(char *slot_flag_arry, int table_type){
 //
 // desc : mark the slot as used by slot id.
 //
+__device__
 void mark_slot_used(char *slot_flag_array, int slot_id){
-	slot_flag_array[slot_id] = 1;
+	const int pid = blockIdx.x;
+	const int tid = threadIdx.x;
+	if (pid == 0&&tid == 0)
+		slot_flag_array[slot_id] = 1;
 }
 
 //
 // desc : mark the slot as freed by slot id.
 //
-
+__device__
 void mark_slot_free(char *slot_flag_array, int slot_id){
-	slot_flag_array[slot_id] = 0;
+	const int pid = blockIdx.x;
+	const int tid = threadIdx.x;
+	if(pid == 0 && tid ==0)
+		slot_flag_array[slot_id] = 0;
 }
 
 

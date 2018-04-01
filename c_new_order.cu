@@ -23,8 +23,8 @@ int get_new_order(struct new_order *p_new_order_arr){ //????????????????????????
     int index=0;
     
     char **record_arr;
-    record_arr=malloc(NO_MAX_SIZE*sizeof(char *));
-    record_arr[index]=malloc(NO_MAX_LENGTH*sizeof(char));
+    record_arr=(char **)malloc(NO_MAX_SIZE*sizeof(char *));
+    record_arr[index]=(char *)malloc(NO_MAX_LENGTH*sizeof(char));
     
     while(1){
       c=fgetc(fp);
@@ -34,7 +34,7 @@ int get_new_order(struct new_order *p_new_order_arr){ //????????????????????????
       if(c=='\n'){
         record_arr[index][i++]='\0';
         index++;
-        record_arr[index]=malloc(NO_MAX_LENGTH*sizeof(char));
+        record_arr[index]=(char *)malloc(NO_MAX_LENGTH*sizeof(char));
         i=0;
       }else{
         if(c!='"'){

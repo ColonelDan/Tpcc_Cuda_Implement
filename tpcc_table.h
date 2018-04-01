@@ -27,7 +27,22 @@
 #define	ITEM 6
 #define	ORDER 7
 #define	ORDER_LINE 8
-//
+// attribution type
+#define LONG 0
+#define DOUBLE 1
+#define INT 2
+#define STR 3
+
+// operation type
+#define EQ 0	// equal
+#define LT 1    // less than
+#define GT 2	// greater than
+#define LE 3	// less than or equal
+#define GE 4 	// greater than or equal
+#define NE 5 	// not equal
+#define NO 6	// no comparison
+
+
 
 // define warehouse 
 // primary :W_ID
@@ -169,26 +184,6 @@ struct stock
 	double S_REMOTE_CNT;
 
 };
-
-//
-// desc : get a free slot id from the table.
-// intput : slot flag arry , table type.
-// output : the slot id or -1 if there is no
-// 	    free slot exists.
-//
-int get_free_slot(char *slot_flag_arry, int table_type);
-
-//
-// desc : mark the slot as used by slot id.
-//
-void mark_slot_used(char *slot_flag_array, int slot_id);
-
-//
-// desc : mark the slot as freed by slot id.
-//
-
-void mark_slot_free(char *slot_flag_array, int slot_id);
-
 
 
 #endif 

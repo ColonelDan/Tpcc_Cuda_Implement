@@ -5,48 +5,48 @@
 #
 
 # variables
-#CC 	= nvcc
-CC 	= gcc
+CC 	= nvcc
+#CC 	= gcc
 
 
 main : 	c_warehouse.o c_stock.o tpcc_main.o c_district.o c_customer.o \
 	c_new_order.o c_order.o c_order_line.o c_item.o c_history.o tpcc_table.o
-	$(CC) -o $@ c_warehouse.o c_stock.o c_district.o tpcc_main.o c_customer.o \
+	$(CC) -o $@ c_warehouse.o c_stock.o c_district.o c_customer.o \
 			c_new_order.o c_order.o c_order_line.o c_item.o c_history.o \
-			tpcc_table.o
+			tpcc_table.o tpcc_main.o
 			
 
-tpcc_main.o : tpcc_main.c
+tpcc_main.o : tpcc_main.cu
 	$(CC) -c $<
 
-c_warehouse.o : c_warehouse.c 
+c_warehouse.o : c_warehouse.cu 
 	$(CC) -c $<
 
-c_stock.o : c_stock.c
+c_stock.o : c_stock.cu
 	$(CC) -c $<
 
-c_district.o : c_district.c
+c_district.o : c_district.cu
 	$(CC) -c $<
 
-c_customer.o : c_customer.c
+c_customer.o : c_customer.cu
 	$(CC) -c $<
 
-c_new_order.o : c_new_order.c
+c_new_order.o : c_new_order.cu
 	$(CC) -c $<
 
-c_order.o : c_order.c
+c_order.o : c_order.cu
 	$(CC) -c $<
 
-c_order_line.o : c_order_line.c
+c_order_line.o : c_order_line.cu
 	$(CC) -c $<
 
-c_item.o : c_item.c
+c_item.o : c_item.cu
 	$(CC) -c $<
 
-c_history.o : c_history.c
+c_history.o : c_history.cu
 	$(CC) -c $<
 
-tpcc_table.o : tpcc_table.c
+tpcc_table.o : tpcc_table.cu
 	$(CC) -c $<
 
 .PHONY : clean

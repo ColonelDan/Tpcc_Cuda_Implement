@@ -45,6 +45,24 @@ char  h_orders_flag[MAX_ORDER_NUM];
 char  h_orderlines_flag[MAX_ORDER_LINE_NUM];  
 char  h_items_flag[MAX_ITEM_NUM];               
 char  h_stocks_flag[MAX_ITEM_NUM];
+
+
+
+void load_data();
+//void cp_data_to_dev();
+int main(int argc, char **argv){
+	load_data();
+	//struct warehouse *d_warehouse;
+	//struct district *d_district;
+	//cudaMalloc( (void **)&d_warehouse, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
+	printf("ok\n");	
+
+}
+
+//void cp_data_to_dev(){
+	
+//}
+
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
@@ -94,7 +112,3 @@ void load_data(){
 		}
 }
 
-int main(int argc, char **argv){
-	load_data();
-	
-}

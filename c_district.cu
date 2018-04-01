@@ -21,8 +21,8 @@ int get_district(struct district *p_district_arr){ //???????????????????????????
     int index=0;
     
     char **record_arr;
-    record_arr=malloc(DISTRICT_RECORD_MAX_SIZE*sizeof(char *));
-    record_arr[index]=malloc(DISTRICT_RECORD_MAX_LENGTH*sizeof(char));
+    record_arr=(char **)malloc(DISTRICT_RECORD_MAX_SIZE*sizeof(char *));
+    record_arr[index]=(char *)malloc(DISTRICT_RECORD_MAX_LENGTH*sizeof(char));
     
     while(1){
       c=fgetc(fp);
@@ -32,7 +32,7 @@ int get_district(struct district *p_district_arr){ //???????????????????????????
       if(c=='\n'){
         record_arr[index][i++]='\0';
         index++;
-        record_arr[index]=malloc(DISTRICT_RECORD_MAX_LENGTH*sizeof(char));
+        record_arr[index]=(char *)malloc(DISTRICT_RECORD_MAX_LENGTH*sizeof(char));
         i=0;
       }else{
         if(c!='"'){
