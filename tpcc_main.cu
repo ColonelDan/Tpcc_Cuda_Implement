@@ -103,7 +103,7 @@ __device__
 void update(int table_type, char *record);
 
 __device__
-char *get(int table_type, int rid);
+void *get(int table_type, int rid);
 
 __device__
 void get_table_head(int table_type, char **table_head);
@@ -141,6 +141,24 @@ void mark_slot_used(char *slot_flag_array, int slot_id);
 __device__
 void mark_slot_free(char *slot_flag_array, int slot_id);
 
+__global__
+void test_table_scan(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+	printf("into kenel\n");
+	return ;
+	d_warehouses = h_d_warehouses;
+	d_warehouses_flag = h_d_warehouses_flag;
+	int rid = 0;
+	struct warehouse ware_tmp;
+	rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid);
+	while(rid != -1){
+		printf("rid: %d\n", rid);
+		void *result = get(WAREHOUSE, rid);
+		d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
+		printf("W_ID : %d\n", ware_tmp.W_ID);
+		rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid+1);
+	}
+	
+}
 
 void load_data();
 //void cp_data_to_dev();
@@ -148,8 +166,8 @@ int main(int argc, char **argv){
 	load_data();
 	printf("load data succeed!\n");
 
-
-
+// memory allocation.
+{
 	cudaMalloc( (void **)&h_d_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
 	cudaMalloc( (void **)&h_d_districts,  sizeof(struct district)*(MAX_DISTRICT_NUM));
 	cudaMalloc( (void **)&h_d_customers,  sizeof(struct customer)*(MAX_CUSTOMER_NUM));
@@ -191,6 +209,10 @@ int main(int argc, char **argv){
 	cudaMemcpy(h_d_items_flag, h_items_flag, sizeof(char)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
 	cudaMemcpy(h_d_stocks_flag, h_stocks_flag, sizeof(char)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
 	printf("memcpy succeed.\n");
+}
+	// test table scan.
+	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*20, cudaMemcpyDeviceToHost);
 	
 	return 0;
 }
@@ -300,7 +322,7 @@ void update(int table_type, int record_id, char *record){
 }
 
 __device__
-char *get(int table_type, int record_id){
+void *get(int table_type, int record_id){
 	char *table_head = NULL;
 	int record_size;
 	const int bid = blockIdx.x;
@@ -308,7 +330,7 @@ char *get(int table_type, int record_id){
 	if(bid==0 && tid ==0){
 		get_table_head(table_type, &table_head);
 		get_record_size(table_type, &record_size);
-		return (char *)(table_head+record_id*record_size);
+		return (void *)(table_head+record_id*record_size);
 	}
 	return NULL;
 }
@@ -327,7 +349,9 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 		get_table_size(table_type, &table_size);
 		get_record_size(table_type, &record_size);
 		int i;
-		for(i = 0; i<table_size; i++){
+		for(i = r_id; i<table_size; i++){
+			if(op == NO)
+				return i;
 			void *record_addr = (void *)(table_head + record_size*i);
 			void *attr_addr = (void *)(record_addr + attr_offset);
 			switch(attr_type){
@@ -360,8 +384,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 							if(des != src)
 								return i;
 							break;
-						case(NO):
-							break;
 					}
 					}
 					break;
@@ -393,8 +415,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 						case(NE):
 							if(des != src)
 								return i;
-							break;
-						case(NO):
 							break;
 					}
 					}
@@ -430,8 +450,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 						case(NE):
 							if(des != src)
 								return i;
-							break;
-						case(NO):
 							break;
 					}
 					}
