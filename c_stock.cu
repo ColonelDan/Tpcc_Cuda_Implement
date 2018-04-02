@@ -43,57 +43,57 @@ int get_stock(struct stock *p_stock_arr){ //
     for(i=1;i<index;i++){
       char *token;
       token=strtok(record_arr[i],",");
-      (p_stock_arr)[i].S_I_ID=atol(token);
+      (p_stock_arr)[i-1].S_I_ID=atol(token);
      
       token=strtok(NULL, ",");
-      (p_stock_arr)[i].S_W_ID=atol(token);//
+      (p_stock_arr)[i-1].S_W_ID=atol(token);//
 	    token=strtok(NULL, ",");
-      (p_stock_arr)[i].S_QUANTITY=atof(token);//
+      (p_stock_arr)[i-1].S_QUANTITY=atof(token);//
       
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_01,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_01,token);
       
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_02,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_02,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_03,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_03,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_04,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_04,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_05,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_05,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_06,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_06,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_07,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_07,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_08,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_08,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_09,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_09,token);
 
       token=strtok(NULL, ",");
-      strcpy((p_stock_arr)[i].S_DIST_10,token);
+      strcpy((p_stock_arr)[i-1].S_DIST_10,token);
 
       token=strtok(NULL, ",");
-      (p_stock_arr)[i].S_YTD=atof(token);//?????????????????????????????????
+      (p_stock_arr)[i-1].S_YTD=atof(token);//?????????????????????????????????
       
       token=strtok(NULL, ",");
-      (p_stock_arr)[i].S_ORDER_CNT=atof(token);//?????????????????????????????????
+      (p_stock_arr)[i-1].S_ORDER_CNT=atof(token);//?????????????????????????????????
       
 
       token=strtok(NULL, ",");
-      (p_stock_arr)[i].S_REMOTE_CNT=atof(token);//?????????????????????????????????
+      (p_stock_arr)[i-1].S_REMOTE_CNT=atof(token);//?????????????????????????????????
       
       
 	free(record_arr[i]);
     }
     free(record_arr);
     fclose (fp);  
-    return index;
+    return index-1;
 }

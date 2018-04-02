@@ -146,10 +146,7 @@ void test_table_scan(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag
 	printf("into kernel\n");
 	d_warehouses = h_d_warehouses;
 	d_warehouses_flag = h_d_warehouses_flag;
-
-	for(int i= 0; i<20 ; i++){
-		printf("slot %d, val : %d\n", i, (int)d_warehouses_flag[i]);
-	}
+	
 	int rid = 0;
 	struct warehouse ware_tmp;
 	rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid);
@@ -169,6 +166,7 @@ int main(int argc, char **argv){
 	load_data();
 	printf("load data succeed!\n");
 
+	
 // memory allocation.
 {
 	cudaMalloc( (void **)&h_d_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
@@ -214,8 +212,6 @@ int main(int argc, char **argv){
 	printf("memcpy succeed.\n");
 }
 	// test table scan.
-	for(int i = 0; i< 20; i++)
-		printf("slot: %d, val: %d\n", i, (int)h_warehouses_flag[i]);
 	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	
@@ -229,60 +225,75 @@ int main(int argc, char **argv){
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
-		for(i = 0; i<warehouse_num -1; i++){
-			h_warehouses_flag[i] = 1;
+		for(i = 0; i<warehouse_num ; i++){
+			h_warehouses_flag[i] = (char)1;
 			printf("load: h_warehouses_flag %d , val : %d\n", i, h_warehouses_flag[i]);
 		}
+
+			
+
 //		printf("load warehouse succeed.\n");		
 
 
 		int stock_num = get_stock(h_stocks);
-		for( i = 0; i<stock_num -1; i++){
+		for( i = 0; i<stock_num ; i++){
 			h_stocks_flag[i] = 1;
 		}
+
+
 //		printf("load stock succeed.\n");		
 
 		int district_num = get_district(h_districts);
-		for( i = 0; i<district_num -1; i++){
+		for( i = 0; i<district_num ; i++){
 			h_districts_flag[i] = 1;
 		}
+
+
 //		printf("load district succeed.\n");		
 		
 		int customer_num = get_customer(h_customers);
-		for( i = 0; i<customer_num -1; i++){
+		for( i = 0; i<customer_num ; i++){
 			h_customers_flag[i] = 1;
 		}
 //		printf("load customer succeed.\n");		
 
 			
 		int new_order_num = get_new_order(h_neworders);
-		for( i = 0; i<new_order_num -1; i++){
+		for( i = 0; i<new_order_num ; i++){
 			h_neworders_flag[i] = 1;
 		}
 //		printf("load new_order succeed.\n");	
+
+
 		
 		int order_num = get_order(h_orders);
-		for( i = 0; i<order_num -1; i++){
+		for( i = 0; i<order_num ; i++){
 			h_orders_flag[i] = 1;
 		}
 //		printf("load order_num succeed.\n");		
+
+
 	
 		int order_line_num = get_order_line(h_orderlines);
-		for( i = 0; i<order_line_num -1; i++){
+		for( i = 0; i<order_line_num ; i++){
 			h_orderlines_flag[i] = 1;
 		}
 //		printf("load order_line succeed.\n");	
+
+
 		
 		int item_num = get_item(h_items);
-		for( i = 0; i<item_num -1; i++){
+		for( i = 0; i<item_num ; i++){
 			h_items_flag[i] = 1;
 		}		
 //		printf("load item succeed.\n");	
 		int history_num = get_history(h_historys);
-		for( i = 0; i<history_num -1; i++){
+		for( i = 0; i<history_num ; i++){
 			h_historys_flag[i] = 1;
 		}
 //		printf("load history succeed.\n");		
+
+		
 }
 
 __device__
