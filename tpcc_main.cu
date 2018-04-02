@@ -100,7 +100,7 @@ __device__
 void delete_rec(int table_type, int record_id);
 
 __device__
-void update(int table_type, void *record);
+void update(int table_type, int record_id, void *record);
 
 __device__
 void *get(int table_type, int rid);
@@ -143,22 +143,65 @@ void mark_slot_free(char *slot_flag_array, int slot_id);
 
 __global__
 void test_table_scan(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
-	printf("into kernel\n");
+	printf("into test tabel scan!\n");
 	d_warehouses = h_d_warehouses;
 	d_warehouses_flag = h_d_warehouses_flag;
 	
 	int rid = 0;
-	struct warehouse ware_tmp;
+	struct warehouse *ware_tmp;
 	rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid);
 	while(rid != -1){
-		printf("rid: %d\n", rid);
-		void *result = get(WAREHOUSE, rid);
-		d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
-		printf("W_ID : %d\n", ware_tmp.W_ID);
+		printf("rid\t%d\t:", rid);
+		ware_tmp =(struct warehouse *)get(WAREHOUSE, rid);
+		//d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
+		
+		//test!!!!!!!!!!!!!
+		printf("%ld, %s, %s, %s, %s, %s, %s, %lf, %lf\n",ware_tmp->W_ID,ware_tmp->W_NAME,
+	  		ware_tmp->W_STREET_1,ware_tmp->W_STREET_2,ware_tmp->W_CITY,ware_tmp->W_STATE,
+	  		ware_tmp->W_ZIP,ware_tmp->W_TAX,ware_tmp->W_YTD);
+		
 		rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid+1);
 	}
+	printf("finish test tabel scan!\n");
 	
 }
+
+//void insert_rec(int table_type, void *record)
+__global__
+void test_insert(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+	printf("into test insert!\n");
+	d_warehouses = h_d_warehouses;
+	d_warehouses_flag = h_d_warehouses_flag;
+	
+	struct warehouse new_rec={5,"huangxiang","asdasdas","asdas","hefei","sd","7854sda",25.3,10.56};
+	insert_rec(WAREHOUSE,&new_rec);
+	printf("finish test insert!\n");
+}
+
+//void update(int table_type, int record_id, void *record);
+__global__
+void test_update(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+	printf("into test update!\n");
+	d_warehouses = h_d_warehouses;
+	d_warehouses_flag = h_d_warehouses_flag;
+	
+	struct warehouse update_rec={4,"xsw","asdasdas","asdas","hefei","sd","7854sda",25.3,10.56};
+	update(WAREHOUSE,1,&update_rec);
+	printf("finish test update!\n");
+}
+
+//void delete_rec(int table_type, int record_id);
+__global__
+void test_delete(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+	printf("into test delete!\n");
+	d_warehouses = h_d_warehouses;
+	d_warehouses_flag = h_d_warehouses_flag;
+	
+	delete_rec(WAREHOUSE,1);
+	delete_rec(WAREHOUSE,3);
+	printf("finish test delete!\n");
+}
+
 
 void load_data();
 //void cp_data_to_dev();
@@ -211,8 +254,15 @@ int main(int argc, char **argv){
 	cudaMemcpy(h_d_stocks_flag, h_stocks_flag, sizeof(char)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
 	printf("memcpy succeed.\n");
 }
-	// test table scan.
+	// test
 	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_insert<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_update<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_delete<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	
 	return 0;
