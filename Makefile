@@ -9,6 +9,8 @@ CC 	= nvcc
 
 # https://stackoverflow.com/questions/31006581/cuda-device-unresolved-extern-function
 # https://blog.csdn.net/hxh1994/article/details/49621759
+
+# test
 DEBUG_CC_FLAGS = -G -g -dc	
 #CC 	= gcc
 
