@@ -8,6 +8,7 @@
 CC 	= nvcc
 #CC 	= gcc
 
+all: main
 
 main : 	c_warehouse.o c_stock.o tpcc_main.o c_district.o c_customer.o \
 	c_new_order.o c_order.o c_order_line.o c_item.o c_history.o tpcc_table.o
