@@ -6,49 +6,53 @@
 
 # variables
 CC 	= nvcc
+
+# https://stackoverflow.com/questions/31006581/cuda-device-unresolved-extern-function
+# https://blog.csdn.net/hxh1994/article/details/49621759
+DEBUG_CC_FLAGS = -G -g -dc	
 #CC 	= gcc
 
 all: main
 
 main : 	c_warehouse.o c_stock.o tpcc_main.o c_district.o c_customer.o \
 	c_new_order.o c_order.o c_order_line.o c_item.o c_history.o tpcc_table.o
-	$(CC) -o $@ c_warehouse.o c_stock.o c_district.o c_customer.o \
+	$(CC) -G -g -o $@ c_warehouse.o c_stock.o c_district.o c_customer.o \
 			c_new_order.o c_order.o c_order_line.o c_item.o c_history.o \
 			tpcc_table.o tpcc_main.o
 			
 
 tpcc_main.o : tpcc_main.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_warehouse.o : c_warehouse.cu 
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_stock.o : c_stock.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_district.o : c_district.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_customer.o : c_customer.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_new_order.o : c_new_order.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_order.o : c_order.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_order_line.o : c_order_line.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_item.o : c_item.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 c_history.o : c_history.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 tpcc_table.o : tpcc_table.cu
-	$(CC) -c $<
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 .PHONY : clean
 clean :
