@@ -94,13 +94,13 @@ __device__
 int d_strcmp(char *des, char *src);
 
 __device__
-void insert_rec(int table_type, char *record);
+void insert_rec(int table_type, void *record);
 
 __device__
 void delete_rec(int table_type, int record_id);
 
 __device__
-void update(int table_type, char *record);
+void update(int table_type, void *record);
 
 __device__
 void *get(int table_type, int rid);
@@ -308,7 +308,7 @@ void delete_rec(int table_type, int record_id){
 }
 
 __device__
-void insert_rec(int table_type, char *record){
+void insert_rec(int table_type, void *record){
 	int record_size = 0;
 	int slot_id = -1;
 	const int bid = blockIdx.x;
@@ -326,7 +326,7 @@ void insert_rec(int table_type, char *record){
 }
 
 __device__
-void update(int table_type, int record_id, char *record){
+void update(int table_type, int record_id, void *record){
 	void *table_head = NULL;
 	int record_size;
 	const int bid = blockIdx.x;
@@ -369,12 +369,11 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 		get_flag_head(table_type, &flag_head);
 		int i;
 		for(i = r_id; i<table_size; i++){
-			if(op == NO)
-				return i;
 			if(!(int)flag_head[i]){
-				printf("slot marked 0\n");
 				continue;
 			}
+			if(op == NO)
+				return i;
 			void *record_addr = (void *)(table_head + record_size*i);
 			void *attr_addr = (void *)(record_addr + attr_offset);
 			switch(attr_type){
