@@ -103,10 +103,10 @@ __device__
 void update(int table_type, char *record);
 
 __device__
-char *get(int table_type, int rid);
+void *get(int table_type, int rid);
 
 __device__
-void get_table_head(int table_type, char **table_head);
+void get_table_head(int table_type, void **table_head);
 
 __device__
 void get_flag_head(int table_type, char **flag_head);
@@ -141,6 +141,27 @@ void mark_slot_used(char *slot_flag_array, int slot_id);
 __device__
 void mark_slot_free(char *slot_flag_array, int slot_id);
 
+__global__
+void test_table_scan(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+	printf("into kernel\n");
+	d_warehouses = h_d_warehouses;
+	d_warehouses_flag = h_d_warehouses_flag;
+
+	for(int i= 0; i<20 ; i++){
+		printf("slot %d, val : %d\n", i, (int)d_warehouses_flag[i]);
+	}
+	int rid = 0;
+	struct warehouse ware_tmp;
+	rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid);
+	while(rid != -1){
+		printf("rid: %d\n", rid);
+		void *result = get(WAREHOUSE, rid);
+		d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
+		printf("W_ID : %d\n", ware_tmp.W_ID);
+		rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid+1);
+	}
+	
+}
 
 void load_data();
 //void cp_data_to_dev();
@@ -148,8 +169,8 @@ int main(int argc, char **argv){
 	load_data();
 	printf("load data succeed!\n");
 
-
-
+// memory allocation.
+{
 	cudaMalloc( (void **)&h_d_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
 	cudaMalloc( (void **)&h_d_districts,  sizeof(struct district)*(MAX_DISTRICT_NUM));
 	cudaMalloc( (void **)&h_d_customers,  sizeof(struct customer)*(MAX_CUSTOMER_NUM));
@@ -191,6 +212,12 @@ int main(int argc, char **argv){
 	cudaMemcpy(h_d_items_flag, h_items_flag, sizeof(char)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
 	cudaMemcpy(h_d_stocks_flag, h_stocks_flag, sizeof(char)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
 	printf("memcpy succeed.\n");
+}
+	// test table scan.
+	for(int i = 0; i< 20; i++)
+		printf("slot: %d, val: %d\n", i, (int)h_warehouses_flag[i]);
+	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	
 	return 0;
 }
@@ -202,56 +229,57 @@ int main(int argc, char **argv){
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
-		for(i = 0; i<warehouse_num ; i++){
+		for(i = 0; i<warehouse_num -1; i++){
 			h_warehouses_flag[i] = 1;
+			printf("load: h_warehouses_flag %d , val : %d\n", i, h_warehouses_flag[i]);
 		}
 //		printf("load warehouse succeed.\n");		
 
 
 		int stock_num = get_stock(h_stocks);
-		for( i = 0; i<stock_num; i++){
+		for( i = 0; i<stock_num -1; i++){
 			h_stocks_flag[i] = 1;
 		}
 //		printf("load stock succeed.\n");		
 
 		int district_num = get_district(h_districts);
-		for( i = 0; i<district_num; i++){
+		for( i = 0; i<district_num -1; i++){
 			h_districts_flag[i] = 1;
 		}
 //		printf("load district succeed.\n");		
 		
 		int customer_num = get_customer(h_customers);
-		for( i = 0; i<customer_num; i++){
+		for( i = 0; i<customer_num -1; i++){
 			h_customers_flag[i] = 1;
 		}
 //		printf("load customer succeed.\n");		
 
 			
 		int new_order_num = get_new_order(h_neworders);
-		for( i = 0; i<new_order_num; i++){
+		for( i = 0; i<new_order_num -1; i++){
 			h_neworders_flag[i] = 1;
 		}
 //		printf("load new_order succeed.\n");	
 		
 		int order_num = get_order(h_orders);
-		for( i = 0; i<order_num; i++){
+		for( i = 0; i<order_num -1; i++){
 			h_orders_flag[i] = 1;
 		}
 //		printf("load order_num succeed.\n");		
 	
 		int order_line_num = get_order_line(h_orderlines);
-		for( i = 0; i<order_line_num; i++){
+		for( i = 0; i<order_line_num -1; i++){
 			h_orderlines_flag[i] = 1;
 		}
 //		printf("load order_line succeed.\n");	
 		
 		int item_num = get_item(h_items);
-		for( i = 0; i<item_num; i++){
+		for( i = 0; i<item_num -1; i++){
 			h_items_flag[i] = 1;
 		}		
 //		printf("load item succeed.\n");	
 		int history_num = get_history(h_historys);
-		for( i = 0; i<history_num; i++){
+		for( i = 0; i<history_num -1; i++){
 			h_historys_flag[i] = 1;
 		}
 //		printf("load history succeed.\n");		
@@ -274,7 +302,7 @@ void insert_rec(int table_type, char *record){
 	int slot_id = -1;
 	const int bid = blockIdx.x;
 	const int tid = threadIdx.x;
-	char *table_head = NULL;
+	void *table_head = NULL;
 	char *flag_head = NULL;
 	if(bid == 0 && tid ==0){
 		get_table_head(table_type, &table_head);
@@ -288,7 +316,7 @@ void insert_rec(int table_type, char *record){
 
 __device__
 void update(int table_type, int record_id, char *record){
-	char *table_head = NULL;
+	void *table_head = NULL;
 	int record_size;
 	const int bid = blockIdx.x;
 	const int tid = threadIdx.x;
@@ -300,15 +328,15 @@ void update(int table_type, int record_id, char *record){
 }
 
 __device__
-char *get(int table_type, int record_id){
-	char *table_head = NULL;
+void *get(int table_type, int record_id){
+	void *table_head = NULL;
 	int record_size;
 	const int bid = blockIdx.x;
 	const int tid = threadIdx.x;
 	if(bid==0 && tid ==0){
 		get_table_head(table_type, &table_head);
 		get_record_size(table_type, &record_size);
-		return (char *)(table_head+record_id*record_size);
+		return (void *)(table_head+record_id*record_size);
 	}
 	return NULL;
 }
@@ -319,15 +347,23 @@ __device__
 int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, int op, void *value, int r_id){
 	const int bid = blockIdx.x;
 	const int tid = threadIdx.x;
-	char *table_head = NULL;
+	void *table_head = NULL;
+	char *flag_head = NULL;
 	int table_size;
 	int record_size;
 	if(bid == 0 && tid == 0){
 		get_table_head(table_type, &table_head);
 		get_table_size(table_type, &table_size);
 		get_record_size(table_type, &record_size);
+		get_flag_head(table_type, &flag_head);
 		int i;
-		for(i = 0; i<table_size; i++){
+		for(i = r_id; i<table_size; i++){
+			if(op == NO)
+				return i;
+			if(!(int)flag_head[i]){
+				printf("slot marked 0\n");
+				continue;
+			}
 			void *record_addr = (void *)(table_head + record_size*i);
 			void *attr_addr = (void *)(record_addr + attr_offset);
 			switch(attr_type){
@@ -360,8 +396,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 							if(des != src)
 								return i;
 							break;
-						case(NO):
-							break;
 					}
 					}
 					break;
@@ -393,8 +427,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 						case(NE):
 							if(des != src)
 								return i;
-							break;
-						case(NO):
 							break;
 					}
 					}
@@ -430,8 +462,6 @@ int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, in
 						case(NE):
 							if(des != src)
 								return i;
-							break;
-						case(NO):
 							break;
 					}
 					}
@@ -474,32 +504,32 @@ void clsoe_scan(){
 }
 */
 __device__
-void get_table_head(int table_type, char **table_head){
+void get_table_head(int table_type, void **table_head){
 
 	switch(table_type){
 		case(WAREHOUSE):
-			*table_head = (char *)d_warehouses;
+			*table_head = (void *)d_warehouses;
 			break;
 		case(STOCK):
-			*table_head = (char *)d_stocks;
+			*table_head = (void *)d_stocks;
 			break;
 		case(DISTRICT):
-			*table_head = (char *)d_districts;
+			*table_head = (void *)d_districts;
 			break;
 		case(ITEM):
-			*table_head = (char *)d_items;
+			*table_head = (void *)d_items;
 			break;
 		case(NEW_ORDER):
-			*table_head = (char *)d_new_orders;
+			*table_head = (void *)d_new_orders;
 			break;
 		case(ORDER):
-			*table_head = (char *)d_orders;
+			*table_head = (void *)d_orders;
 			break;
 		case(ORDER_LINE):
-			*table_head = (char *)d_orderlines;
+			*table_head = (void *)d_orderlines;
 			break;
 		case(CUSTOMER):
-			*table_head = (char *)d_customers;
+			*table_head = (void *)d_customers;
 			break;
 	}
 
