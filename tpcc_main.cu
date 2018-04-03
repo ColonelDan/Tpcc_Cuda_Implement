@@ -11,8 +11,11 @@
 #include <assert.h>
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 #include "tpcc_table.h"
+#include "utility.h"
+#include "table_operator.h"
 
 int get_item(struct item *item_arr);
 int get_warehouse(struct warehouse *warehouse_arr);
@@ -23,7 +26,6 @@ int get_order_line(struct order_line *o);
 int get_district(struct district *d);
 int get_stock(struct stock *s);
 int get_history(struct history *h);
-
 
 //get 9 tables.
 struct warehouse h_warehouses[MAX_WAREHOUSE_NUM];
@@ -53,7 +55,7 @@ struct customer *h_d_customers;
 struct history *h_d_historys;
 struct new_order *h_d_new_orders;
 struct order *h_d_orders;
-struct orderline *h_d_orderlines;
+struct order_line *h_d_orderlines;
 struct item *h_d_items;
 struct stock *h_d_stocks;
 
@@ -83,84 +85,38 @@ __device__ struct customer *d_customers;
 __device__ struct history *d_historys;
 __device__ struct new_order *d_new_orders;
 __device__ struct order *d_orders;
-__device__ struct orderline *d_orderlines;
+__device__ struct order_line *d_orderlines;
 __device__ struct item *d_items;
 __device__ struct stock *d_stocks;
 
-__device__ 
-void d_memcpy(void *des, void *src, int size);
-
-__device__
-int d_strcmp(char *des, char *src);
-
-__device__
-void insert_rec(int table_type, void *record);
-
-__device__
-void delete_rec(int table_type, int record_id);
-
-__device__
-void update(int table_type, int record_id, void *record);
-
-__device__
-void *get(int table_type, int rid);
-
-__device__
-void get_table_head(int table_type, void **table_head);
-
-__device__
-void get_flag_head(int table_type, char **flag_head);
-
-__device__
-void get_table_size(int table_type, int *table_size);
-
-__device__
-void get_record_size(int table_type, int *record_size);
-
-__device__
-int table_scan(int table_type, int attr_type, int attr_size,  int attr_offset, int op , void *value, int rid);
-
-//
-// desc : get a free slot id from the table.
-// intput : slot flag arry , table type.
-// output : the slot id or -1 if there is no
-//          free slot exists.
-//
-__device__
-int get_free_slot(char *slot_flag_arry, int table_type);
-
-//
-// desc : mark the slot as used by slot id.
-//
-__device__
-void mark_slot_used(char *slot_flag_array, int slot_id);
-
-//
-// desc : mark the slot as freed by slot id.
-//
-__device__
-void mark_slot_free(char *slot_flag_array, int slot_id);
 
 __global__
-void test_table_scan(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
+void test_table_scan(struct district *h_d_districts, char *h_d_districts_flag){
 	printf("into test tabel scan!\n");
-	d_warehouses = h_d_warehouses;
-	d_warehouses_flag = h_d_warehouses_flag;
+	d_districts = h_d_districts;
+	d_districts_flag = h_d_districts_flag;
 	
 	int rid = 0;
-	struct warehouse *ware_tmp;
-	rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid);
+	struct district tmp;
+	long offset = (unsigned int)&tmp.D_ZIP - (unsigned int)&tmp.D_ID;
+
+
+	struct district *dist_tmp;
+	char tmp_zip[10]="292511111";
+	printf("%s\n", tmp_zip);
+
+	rid = table_scan(DISTRICT, STR, 10-1, offset, EQ, tmp_zip, rid);
 	while(rid != -1){
 		printf("rid\t%d\t:", rid);
-		ware_tmp =(struct warehouse *)get(WAREHOUSE, rid);
+		dist_tmp =(struct district *)get(DISTRICT, rid);
 		//d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
 		
 		//test!!!!!!!!!!!!!
-		printf("%ld, %s, %s, %s, %s, %s, %s, %lf, %lf\n",ware_tmp->W_ID,ware_tmp->W_NAME,
-	  		ware_tmp->W_STREET_1,ware_tmp->W_STREET_2,ware_tmp->W_CITY,ware_tmp->W_STATE,
-	  		ware_tmp->W_ZIP,ware_tmp->W_TAX,ware_tmp->W_YTD);
+		printf("%ld, %ld, %s, %s, %s, %s, %s, %s, %lf, %lf, %ld\n",dist_tmp->D_ID, dist_tmp->D_W_ID,
+	  		dist_tmp->D_NAME, dist_tmp->D_STREET_1, dist_tmp->D_STREET_2, dist_tmp->D_CITY, dist_tmp->D_STATE,
+	  		dist_tmp->D_ZIP, dist_tmp->D_TAX, dist_tmp->D_YTD, dist_tmp->D_NEXT_O_ID);
 		
-		rid = table_scan(WAREHOUSE, LONG, 0, 0, NO, NULL, rid+1);
+		rid = table_scan(DISTRICT, STR, 10-1, offset, EQ, tmp_zip, rid+1);
 	}
 	printf("finish test tabel scan!\n");
 	
@@ -203,65 +159,137 @@ void test_delete(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
 }
 
 
+void cp_data_to_dev();
+
+__global__
+void cp_table_to_device(
+	struct warehouse *h_d_warehouses,
+	struct district *h_d_districts,
+	struct customer *h_d_customers,
+	struct order *h_d_orders,
+	struct new_order *h_d_new_orders,
+	struct order_line *h_d_orderlines,
+	struct item *h_d_items,
+	struct stock *h_d_stocks,
+	struct history *h_d_historys);
+
+__global__
+void cp_flag_to_device(
+	char *h_d_warehouses_flag,
+	char *h_d_districts_flag,
+	char *h_d_orders_flag,
+	char *h_d_orderlines_flag,
+	char *h_d_new_orders,
+	char *h_d_orders,
+	char *h_d_customers_flag,
+	char *h_d_stocks_flag,
+	char *h_d_historys_flag);
+
+__device__
+void stock_level(){
+	printf("into stock_level\n");
+	// random function
+	curandState state;
+	int id = threadIdx.x;
+	long rand = 0;
+	long seed = rand;
+	curand_init(seed, id, 0, &state);
+	// for(int i = 0; i< 20 ; i++)
+	// {
+	// 	printf("rand : %u\n", curand(&state));
+	// }
+	
+	//generate parameters.
+	long W_ID = (long)(curand(&state)%3 + 1);
+	long D_W_ID;
+	long D_ID;
+	unsigned int limit;
+
+	int rid = (int)curand(&state)%30;
+	printf("rid = %d\n", rid);
+	rid = table_scan(DISTRICT, LONG, 0, 0, NO, NULL, rid);
+	printf("ok\n");
+	struct district tmp_district;
+	void *content = get(DISTRICT, rid);
+	d_memcpy(&tmp_district, content, sizeof(struct district));
+	D_W_ID = tmp_district.D_W_ID;
+	D_ID = tmp_district.D_ID;
+	limit = curand(&state);
+
+	printf("****** stock_level ******\nparameters:\n W_ID : %ld\n D_W_ID : %ld\n D_ID : %ld\n limit : %u\n", W_ID, D_W_ID, D_ID, limit);
+
+	int offset_D_W_ID = (unsigned int)&tmp_district.D_W_ID - (unsigned int)&tmp_district.D_ID;
+	int offset_D_ID = 0;
+	int rid1 = table_scan(DISTRICT, LONG, 0, offset_D_W_ID, EQ, &W_ID, 0);
+	int rid2;
+	while( rid1 != -1){
+		rid2 = table_scan(DISTRICT, LONG, 0, offset_D_ID, EQ, &D_ID, rid);
+		if(rid1 == rid2)
+			break;
+		rid1 = table_scan(DISTRICT, LONG, 0, offset_D_W_ID, EQ, &W_ID, rid1+1);
+	}
+
+	content = get(DISTRICT, rid1);
+	d_memcpy(&tmp_district, content, sizeof(struct district));
+
+	long next_order_id = tmp_district.D_NEXT_O_ID;
+	printf("D_NEXT_ID : %ld\n", next_order_id);
+
+
+}
+
+
+__global__
+void transaction_process(){
+	printf("into kernel !\n");
+	
+	stock_level();
+}
+
 void load_data();
-//void cp_data_to_dev();
+
+
 int main(int argc, char **argv){
 	load_data();
 	printf("load data succeed!\n");
 
-	
-// memory allocation.
-{
-	cudaMalloc( (void **)&h_d_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
-	cudaMalloc( (void **)&h_d_districts,  sizeof(struct district)*(MAX_DISTRICT_NUM));
-	cudaMalloc( (void **)&h_d_customers,  sizeof(struct customer)*(MAX_CUSTOMER_NUM));
-	cudaMalloc( (void **)&h_d_historys,  sizeof(struct history)*(MAX_HISTORY_NUM));
-	cudaMalloc( (void **)&h_d_new_orders,  sizeof(struct new_order)*(MAX_NEWORDER_NUM));
-	cudaMalloc( (void **)&h_d_orders,  sizeof(struct order)*(MAX_ORDER_NUM));
-	cudaMalloc( (void **)&h_d_orderlines,  sizeof(struct order_line)*(MAX_ORDER_LINE_NUM));
-	cudaMalloc( (void **)&h_d_items,  sizeof(struct item)*(MAX_ITEM_NUM));
-	cudaMalloc( (void **)&h_d_stocks,  sizeof(struct stock)*(MAX_STOCK_NUM));
-
-	cudaMalloc( (void **)&h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM);
-	cudaMalloc( (void **)&h_d_districts_flag, sizeof(char)*MAX_DISTRICT_NUM);
-	cudaMalloc( (void **)&h_d_customers_flag, sizeof(char)*MAX_CUSTOMER_NUM);
-	cudaMalloc( (void **)&h_d_historys_flag, sizeof(char)*MAX_HISTORY_NUM);
-	cudaMalloc( (void **)&h_d_new_orders_flag, sizeof(char)*MAX_NEWORDER_NUM);
-	cudaMalloc( (void **)&h_d_orders_flag, sizeof(char)*MAX_ORDER_NUM);
-	cudaMalloc( (void **)&h_d_orderlines_flag, sizeof(char)*MAX_ORDER_LINE_NUM);
-	cudaMalloc( (void **)&h_d_items_flag, sizeof(char)*MAX_ITEM_NUM);
-	cudaMalloc( (void **)&h_d_stocks_flag, sizeof(char)*MAX_STOCK_NUM);
-	printf("device memory allocate succeed.\n");	
-
-	cudaMemcpy(h_d_warehouses, h_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM), cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_districts, h_districts, sizeof(struct district)*MAX_DISTRICT_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_customers, h_customers, sizeof(struct customer)*MAX_CUSTOMER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_historys, h_historys, sizeof(struct history)*MAX_HISTORY_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_new_orders, h_neworders, sizeof(struct new_order)*MAX_NEWORDER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_orders, h_orders, sizeof(struct order)*MAX_ORDER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_orderlines, h_orderlines, sizeof(struct order_line)*MAX_ORDER_LINE_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_items, h_items, sizeof(struct item)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_stocks, h_stocks, sizeof(struct stock)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
-	
-	cudaMemcpy(h_d_warehouses_flag, h_warehouses_flag, sizeof(char)*(MAX_WAREHOUSE_NUM), cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_districts_flag, h_districts_flag, sizeof(char)*MAX_DISTRICT_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_customers_flag, h_customers_flag, sizeof(char)*MAX_CUSTOMER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_historys_flag, h_historys_flag, sizeof(char)*MAX_HISTORY_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_new_orders_flag, h_neworders_flag, sizeof(char)*MAX_NEWORDER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_orders_flag, h_orders_flag, sizeof(char)*MAX_ORDER_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_orderlines_flag, h_orderlines_flag, sizeof(char)*MAX_ORDER_LINE_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_items_flag, h_items_flag, sizeof(char)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
-	cudaMemcpy(h_d_stocks_flag, h_stocks_flag, sizeof(char)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
-	printf("memcpy succeed.\n");
-}
 	// test
-	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_insert<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_update<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_delete<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_insert<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_update<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_delete<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
+ 
+	
+	//test_table_scan<<<1, 1>>>(h_d_districts, h_d_districts_flag);
+	cp_data_to_dev();
+
+	cp_table_to_device<<<1, 1>>>(
+			h_d_warehouses,
+			h_d_districts,
+			h_d_customers,
+			h_d_orders,
+			h_d_new_orders,
+			h_d_orderlines,
+			h_d_items,
+			h_d_stocks,
+			h_d_historys);
+
+	cp_flag_to_device<<<1, 1>>>(
+			h_d_warehouses_flag,
+			h_d_districts_flag,
+			h_d_orders_flag,
+			h_d_orderlines_flag,
+			h_d_new_orders_flag,
+			h_d_items_flag,
+			h_d_customers_flag,
+			h_d_stocks_flag,
+			h_d_historys_flag);
+
+	
+	transaction_process<<<1, 1>>>();
 	
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	
@@ -346,364 +374,92 @@ void load_data(){
 		
 }
 
-__device__
-void delete_rec(int table_type, int record_id){
-	const int bid = blockIdx.x;
-	const int tid = blockIdx.x;
-	char *flag_head = NULL;
-	if(bid == 0 && tid == 0){
-		get_flag_head(table_type, &flag_head);
-		mark_slot_free(flag_head, record_id);	
-	}
-}
+void cp_data_to_dev(){
+	cudaMalloc( (void **)&h_d_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM));
+	cudaMalloc( (void **)&h_d_districts,  sizeof(struct district)*(MAX_DISTRICT_NUM));
+	cudaMalloc( (void **)&h_d_customers,  sizeof(struct customer)*(MAX_CUSTOMER_NUM));
+	cudaMalloc( (void **)&h_d_historys,  sizeof(struct history)*(MAX_HISTORY_NUM));
+	cudaMalloc( (void **)&h_d_new_orders,  sizeof(struct new_order)*(MAX_NEWORDER_NUM));
+	cudaMalloc( (void **)&h_d_orders,  sizeof(struct order)*(MAX_ORDER_NUM));
+	cudaMalloc( (void **)&h_d_orderlines,  sizeof(struct order_line)*(MAX_ORDER_LINE_NUM));
+	cudaMalloc( (void **)&h_d_items,  sizeof(struct item)*(MAX_ITEM_NUM));
+	cudaMalloc( (void **)&h_d_stocks,  sizeof(struct stock)*(MAX_STOCK_NUM));
 
-__device__
-void insert_rec(int table_type, void *record){
-	int record_size = 0;
-	int slot_id = -1;
-	const int bid = blockIdx.x;
-	const int tid = threadIdx.x;
-	void *table_head = NULL;
-	char *flag_head = NULL;
-	if(bid == 0 && tid ==0){
-		get_table_head(table_type, &table_head);
-		get_record_size(table_type, &record_size);
-		get_flag_head(table_type, &flag_head);
-		slot_id = get_free_slot(flag_head, table_type);
-		d_memcpy( table_head+slot_id*record_size, record, record_size);
-		mark_slot_used(flag_head, slot_id);
-	}
-}
+	cudaMalloc( (void **)&h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM);
+	cudaMalloc( (void **)&h_d_districts_flag, sizeof(char)*MAX_DISTRICT_NUM);
+	cudaMalloc( (void **)&h_d_customers_flag, sizeof(char)*MAX_CUSTOMER_NUM);
+	cudaMalloc( (void **)&h_d_historys_flag, sizeof(char)*MAX_HISTORY_NUM);
+	cudaMalloc( (void **)&h_d_new_orders_flag, sizeof(char)*MAX_NEWORDER_NUM);
+	cudaMalloc( (void **)&h_d_orders_flag, sizeof(char)*MAX_ORDER_NUM);
+	cudaMalloc( (void **)&h_d_orderlines_flag, sizeof(char)*MAX_ORDER_LINE_NUM);
+	cudaMalloc( (void **)&h_d_items_flag, sizeof(char)*MAX_ITEM_NUM);
+	cudaMalloc( (void **)&h_d_stocks_flag, sizeof(char)*MAX_STOCK_NUM);
+	printf("device memory allocate succeed.\n");	
 
-__device__
-void update(int table_type, int record_id, void *record){
-	void *table_head = NULL;
-	int record_size;
-	const int bid = blockIdx.x;
-	const int tid = threadIdx.x;
-	if( bid==0 && tid ==0){
-		get_table_head(table_type, &table_head);
-		get_record_size(table_type, &record_size);
-		d_memcpy( table_head+record_id*record_size, record, record_size);
-	}
-}
-
-__device__
-void *get(int table_type, int record_id){
-	void *table_head = NULL;
-	int record_size;
-	const int bid = blockIdx.x;
-	const int tid = threadIdx.x;
-	if(bid==0 && tid ==0){
-		get_table_head(table_type, &table_head);
-		get_record_size(table_type, &record_size);
-		return (void *)(table_head+record_id*record_size);
-	}
-	return NULL;
-}
-
-// desc: scan table by compare some attribute in the table from the r_id.
-// output: the record_id or -1 if there is no record match condition.
-__device__
-int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, int op, void *value, int r_id){
-	const int bid = blockIdx.x;
-	const int tid = threadIdx.x;
-	void *table_head = NULL;
-	char *flag_head = NULL;
-	int table_size;
-	int record_size;
-	if(bid == 0 && tid == 0){
-		get_table_head(table_type, &table_head);
-		get_table_size(table_type, &table_size);
-		get_record_size(table_type, &record_size);
-		get_flag_head(table_type, &flag_head);
-		int i;
-		for(i = r_id; i<table_size; i++){
-			if(!(int)flag_head[i]){
-				continue;
-			}
-			if(op == NO)
-				return i;
-			void *record_addr = (void *)(table_head + record_size*i);
-			void *attr_addr = (void *)(record_addr + attr_offset);
-			switch(attr_type){
-				case(INT):
-					{
-					int des = *((int *)attr_addr);
-					int src = *((int *)value);
-					switch(op){
-						case(EQ):
-							if(des == src)
-								return i;
-							break;
-						case(LT):
-							if(des < src)
-								return i;
-							break;
-						case(GT):
-							if(des > src)
-								return i;
-							break;
-						case(LE):
-							if(des <= src)
-								return i;
-							break;
-						case(GE):
-							if(des >= src)
-								return i;
-							break;
-						case(NE):
-							if(des != src)
-								return i;
-							break;
-					}
-					}
-					break;
-				case(LONG):
-					{
-					long des = *((long *)attr_addr);
-					long src = *((long *)value);
-					switch(op){
-						case(EQ):
-							if(des == src)
-								return i;
-							break;
-						case(LT):
-							if(des < src)
-								return i;
-							break;
-						case(GT):
-							if(des > src)
-								return i;
-							break;
-						case(LE):
-							if(des <= src)
-								return i;
-							break;
-						case(GE):
-							if(des >= src)
-								return i;
-							break;
-						case(NE):
-							if(des != src)
-								return i;
-							break;
-					}
-					}
-					break;
-				case(DOUBLE):
-					{
-					double des = *((double *)attr_addr);
-					double src = *((double *)value);
-					switch(op){
-						case(EQ):
-							if(des == src)
-								return i;
-							break;
-						case(LT):
-
-							if(des < src)
-								return i;
-							break;
-						case(GT):
-
-							if(des > src)
-								return i;
-							break;
-						case(LE):
-							if(des <= src)
-								return i;
-
-							break;
-						case(GE):
-							if(des >= src)
-								return i;
-							break;
-						case(NE):
-							if(des != src)
-								return i;
-							break;
-					}
-					}
-					break;
-				case(STR):
-					{
-					char des[200];
-					d_memcpy(des, (char *)attr_addr, attr_size);
-					des[attr_size+1] = '\0';
-					char src[200];
-					d_memcpy(src, (char *)value, attr_size);
-					src[attr_size+1] = '\0';
-					switch(op){
-						case(EQ):
-							if( !d_strcmp(des, src) )
-								return i;
-							break;
-						case(NE):
-							if(d_strcmp(des, src))
-								return i;
-							break;
-					}
-					}
-					break;
-			}	
-		}
-	}	
-	return -1;
-}
-
-/*
-__device__
-void get_next_record(){
-
-}
-
-__device__
-void clsoe_scan(){
-
-}
-*/
-__device__
-void get_table_head(int table_type, void **table_head){
-
-	switch(table_type){
-		case(WAREHOUSE):
-			*table_head = (void *)d_warehouses;
-			break;
-		case(STOCK):
-			*table_head = (void *)d_stocks;
-			break;
-		case(DISTRICT):
-			*table_head = (void *)d_districts;
-			break;
-		case(ITEM):
-			*table_head = (void *)d_items;
-			break;
-		case(NEW_ORDER):
-			*table_head = (void *)d_new_orders;
-			break;
-		case(ORDER):
-			*table_head = (void *)d_orders;
-			break;
-		case(ORDER_LINE):
-			*table_head = (void *)d_orderlines;
-			break;
-		case(CUSTOMER):
-			*table_head = (void *)d_customers;
-			break;
-	}
-
-}
-
-__device__
-void get_flag_head(int table_type, char **flag_head){
-
-	switch(table_type){
-		case(WAREHOUSE):
-			*flag_head = d_warehouses_flag;
-			break;
-		case(STOCK):
-			*flag_head = d_stocks_flag;
-			break;
-		case(DISTRICT):
-			*flag_head = d_districts_flag;
-			break;
-		case(ITEM):
-			*flag_head = d_items_flag;
-			break;
-		case(NEW_ORDER):
-			*flag_head = d_new_orders_flag;
-			break;
-		case(ORDER):
-			*flag_head = d_orders_flag;
-			break;
-		case(ORDER_LINE):
-			*flag_head = d_orderlines_flag;
-			break;
-		case(CUSTOMER):
-			*flag_head = d_customers_flag;
-			break;
-	}
-}
-
-__device__
-void get_record_size(int table_type, int *record_size){
+	cudaMemcpy(h_d_warehouses, h_warehouses, sizeof(struct warehouse)*(MAX_WAREHOUSE_NUM), cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_districts, h_districts, sizeof(struct district)*MAX_DISTRICT_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_customers, h_customers, sizeof(struct customer)*MAX_CUSTOMER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_historys, h_historys, sizeof(struct history)*MAX_HISTORY_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_new_orders, h_neworders, sizeof(struct new_order)*MAX_NEWORDER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_orders, h_orders, sizeof(struct order)*MAX_ORDER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_orderlines, h_orderlines, sizeof(struct order_line)*MAX_ORDER_LINE_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_items, h_items, sizeof(struct item)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_stocks, h_stocks, sizeof(struct stock)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
 	
-	switch(table_type){
-		case(WAREHOUSE):
-			*record_size = sizeof(struct warehouse);
-			break;
-		case(STOCK):
-			*record_size = sizeof(struct stock);
-			break;
-		case(DISTRICT):
-			*record_size = sizeof(struct district);
-			break;
-		case(ITEM):
-			*record_size = sizeof(struct customer);
-			break;
-		case(NEW_ORDER):
-			*record_size = sizeof(struct new_order);
-			break;
-		case(ORDER):
-			*record_size = sizeof(struct order);
-			break;
-		case(ORDER_LINE):
-			*record_size = sizeof(struct order_line);
-			break;
-		case(CUSTOMER):
-			*record_size = sizeof(struct customer);
-			break;
-	}
+	cudaMemcpy(h_d_warehouses_flag, h_warehouses_flag, sizeof(char)*(MAX_WAREHOUSE_NUM), cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_districts_flag, h_districts_flag, sizeof(char)*MAX_DISTRICT_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_customers_flag, h_customers_flag, sizeof(char)*MAX_CUSTOMER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_historys_flag, h_historys_flag, sizeof(char)*MAX_HISTORY_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_new_orders_flag, h_neworders_flag, sizeof(char)*MAX_NEWORDER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_orders_flag, h_orders_flag, sizeof(char)*MAX_ORDER_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_orderlines_flag, h_orderlines_flag, sizeof(char)*MAX_ORDER_LINE_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_items_flag, h_items_flag, sizeof(char)*MAX_ITEM_NUM, cudaMemcpyHostToDevice);
+	cudaMemcpy(h_d_stocks_flag, h_stocks_flag, sizeof(char)*MAX_STOCK_NUM, cudaMemcpyHostToDevice);
+	printf("memcpy succeed.\n");
 }
 
-__device__
-void get_table_size(int table_type, int *table_size){
-
-	switch(table_type){
-		case(WAREHOUSE):
-			*table_size = MAX_WAREHOUSE_NUM;
-			break;
-		case(STOCK):
-			*table_size = MAX_STOCK_NUM;
-			break;
-		case(DISTRICT):
-			*table_size = MAX_DISTRICT_NUM;
-			break;
-		case(ITEM):
-			*table_size = MAX_ITEM_NUM;
-			break;
-		case(NEW_ORDER):
-			*table_size = MAX_NEWORDER_NUM;
-			break;
-		case(ORDER):
-			*table_size = MAX_ORDER_NUM;
-			break;
-		case(ORDER_LINE):
-			*table_size = MAX_ORDER_LINE_NUM;
-			break;
-		case(CUSTOMER):
-			*table_size = MAX_CUSTOMER_NUM;
-			break;
-	}
-}
-__device__
-void  d_memcpy(void *des, void *src, int size){
-	int i ;
-	for(i = 0; i< size; i++){
-		((char *)des)[i] = ((char *)src)[i];
-	} 
+__global__
+void cp_table_to_device(
+	struct warehouse *h_d_warehouses,
+	struct district *h_d_districts,
+	struct customer *h_d_customers,
+	struct order *h_d_orders,
+	struct new_order *h_d_new_orders,
+	struct order_line *h_d_orderlines,
+	struct item *h_d_items,
+	struct stock *h_d_stocks,
+	struct history *h_d_historys){
+	printf("cp tabel to device\n");
+	d_warehouses = h_d_warehouses;
+	d_districts = h_d_districts;
+	d_customers = h_d_customers;
+	d_orders = h_d_orders;
+	d_new_orders = h_d_new_orders;
+	d_orderlines = h_d_orderlines;
+	d_items = h_d_items;
+	d_stocks = h_d_stocks;
+	d_historys = h_d_historys;
 }
 
-__device__
-int d_strcmp(char *des, char *src){
-	int i=0;
-	while(des[i] == src[i]){
-		if(des[i] == '\0')	
-			return 0;
-		else{
-			i++;
-		}
-	}
-	return i;
+__global__
+void cp_flag_to_device(
+	char *h_d_warehouses_flag,
+	char *h_d_districts_flag,
+	char *h_d_orders_flag,
+	char *h_d_orderlines_flag,
+	char *h_d_new_orders_flag,
+	char *h_d_items_flag,
+	char *h_d_customers_flag,
+	char *h_d_stocks_flag,
+	char *h_d_historys_flag){
+	printf("cp flag to device\n");
+	    	d_warehouses_flag =   h_d_warehouses_flag;
+	    	d_districts_flag = h_d_districts_flag;
+	    	d_orders_flag = h_d_orders_flag;
+	    	d_orderlines_flag = h_d_orderlines_flag;
+	    	d_new_orders_flag = h_d_new_orders_flag;
+	    	d_items_flag = h_d_items_flag;
+	    	d_customers_flag = h_d_customers_flag;
+	    	d_stocks_flag = h_d_stocks_flag;
+	    	d_historys_flag = h_d_historys_flag;
 }

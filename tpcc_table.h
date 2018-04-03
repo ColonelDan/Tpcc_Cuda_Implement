@@ -1,6 +1,6 @@
 //
 //	desc: head file the 9 table in tpcc.
-//	date: 2018-3.27
+//	date: 2018-3-27
 //	author: Xie Shangwei
 //
 //
@@ -67,7 +67,7 @@ struct district
 	long D_ID; 
 	long D_W_ID; // reference to warehouse.
 	char D_NAME[10+1]; 
-	char D_STREET_1[10+1];
+	char D_STREET_1[20+1];
 	char D_STREET_2[20+1];
 	char D_CITY[20+1];
 	char D_STATE[2+1];
@@ -185,6 +185,14 @@ struct stock
 
 };
 
+__device__
+int get_free_slot(char *slot_flag_arry, int table_type);
+
+__device__
+void mark_slot_used(char *slot_flag_arry, int slot_id);
+
+__device__
+void mark_slot_free(char *slot_flag_arry, int slot_id);
 
 #endif 
 
