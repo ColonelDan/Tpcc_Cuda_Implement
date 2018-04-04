@@ -2,6 +2,6 @@
 #define TX_H
 
 __device__
-void stock_level();
+void tx_stock_level();
 
 #endif

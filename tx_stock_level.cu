@@ -16,7 +16,7 @@ int d_max(int a, int b){
 }
 
 __device__
-void stock_level(){
+void tx_stock_level(){
 	printf("into stock_level\n");
 	
 	//generate parameters.
@@ -103,5 +103,9 @@ void stock_level(){
 	}
 
 	//next step.
-	// scan stock where S_I_ID = OL_I_ID, S_W_ID=W_ID, S_QUANTITY < limite
+	// scan stock where S_I_ID = OL_I_ID, S_W_ID=W_ID, S_QUANTITY < limit.
+	start_id = 0;
+	struct stock tmp_stock;
+	int offset_S_I_ID = (unsigned int)&tmp_stock.S_I_ID - (unsigned int)&tmp_stock.
+	id = table_scan(STOCK, LONG, )
 }
