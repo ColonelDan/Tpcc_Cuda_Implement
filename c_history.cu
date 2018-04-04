@@ -77,7 +77,7 @@ printf("index: %d\n", index);
       strcpy((p_history_arr)[i-1].H_DATA,token);
       
       token=strtok(NULL, ",");
-	free(record_arr[i]);
+	free(record_arr[i-1]);
       
 	}
      free(record_arr);

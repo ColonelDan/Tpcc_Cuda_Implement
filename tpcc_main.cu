@@ -98,7 +98,7 @@ void test_table_scan(){
 	int rid = 0;
 	struct item *tmp_item;
 	//long offset = (unsigned int)&tmp_item.I_ID - (unsigned int)&tmp_item.I_ID;
-	long offset = 0;
+	//long offset = 0;
 
 	//struct  *dist_tmp;
 	//char tmp_zip[10]="292511111";
@@ -253,8 +253,8 @@ int main(int argc, char **argv){
 			h_d_stocks_flag,
 			h_d_historys_flag);
 
-	test_table_scan<<<1, 1>>>();
-	//transaction_process<<<1, 1>>>();
+	//test_table_scan<<<1, 1>>>();
+	transaction_process<<<1, 1>>>();
 	
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	
@@ -268,12 +268,7 @@ int main(int argc, char **argv){
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
-		for(i = 0; i<warehouse_num ; i++){
-			h_warehouses_flag[i] = (char)1;
-			printf("load: h_warehouses_flag %d , val : %d\n", i, h_warehouses_flag[i]);
-		}
-
-			
+		
 
 //		printf("load warehouse succeed.\n");		
 

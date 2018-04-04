@@ -74,10 +74,13 @@ int get_order_line(struct order_line *p_order_line_arr){ //?????????????????????
       token=strtok(NULL, ",");
       (p_order_line_arr)[i-1].OL_AMOUNT=atof(token);//?????????????????????????????????
 
+      token=strtok(NULL, ",");
+      strcpy((p_order_line_arr)[i-1].OL_DIST_INFO, token);
+
       
       
       token=strtok(NULL, ",");
-    	free(record_arr[i]) ; 
+    	free(record_arr[i-1]) ; 
       //printf("!!!!!!!!!!!!!!!!\n%ld\n%s\n%s\n%s\n%s\n%s\n%s\n%lf\n%lf\n",order_line_arr[i].W_ID,order_line_arr[i].W_NAME,
 	  //		order_line_arr[i].W_STREET_1,order_line_arr[i].W_STREET_2,order_line_arr[i].W_CITY,order_line_arr[i].W_STATE,
 	  //		order_line_arr[i].W_ZIP,order_line_arr[i].W_TAX,order_line_arr[i].W_YTD);

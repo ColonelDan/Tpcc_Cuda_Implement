@@ -89,9 +89,12 @@ int get_stock(struct stock *p_stock_arr){ //
 
       token=strtok(NULL, ",");
       (p_stock_arr)[i-1].S_REMOTE_CNT=atof(token);//?????????????????????????????????
+
+      token=strtok(NULL, ",");
+      strcpy( (p_stock_arr)[i-1].S_DATA, token );
       
       
-	free(record_arr[i]);
+	   free(record_arr[i-1]);
     }
     free(record_arr);
     fclose (fp);  

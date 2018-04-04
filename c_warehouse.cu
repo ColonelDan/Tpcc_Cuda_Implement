@@ -80,23 +80,10 @@ int get_warehouse(struct warehouse *p_warehouse_arr){ //????????????????????????
       //printf("!!!!!!!!!!!!!!!!\n%ld\n%s\n%s\n%s\n%s\n%s\n%s\n%lf\n%lf\n",warehouse_arr[i].W_ID,warehouse_arr[i].W_NAME,
 	  //		warehouse_arr[i].W_STREET_1,warehouse_arr[i].W_STREET_2,warehouse_arr[i].W_CITY,warehouse_arr[i].W_STATE,
 	  //		warehouse_arr[i].W_ZIP,warehouse_arr[i].W_TAX,warehouse_arr[i].W_YTD);
+      free(record_arr[i-1]);
     }
-     
+    free(record_arr);
     fclose (fp);  
     
     return index-1;
 }
-/*
-int main(int argc, const char * argv[]) {  
-    
-    struct warehouse *warehouse_arr = (struct warehouse *)malloc(MAX_WAREHOUSE_NUM*sizeof(struct warehouse));//?????????????????????????????????
-    int index=get_warehouse(warehouse_arr);//?????????????????????????????????
-    int i;
-    for(i=1;i<index;i++){ //?????????????????????????????????
-		printf("!!!!!!!!!!!!!!!!\n%ld\n%s\n%s\n%s\n%s\n%s\n%s\n%lf\n%lf\n",warehouse_arr[i].W_ID,warehouse_arr[i].W_NAME,
-	  		warehouse_arr[i].W_STREET_1,warehouse_arr[i].W_STREET_2,warehouse_arr[i].W_CITY,warehouse_arr[i].W_STATE,
-	  		warehouse_arr[i].W_ZIP,warehouse_arr[i].W_TAX,warehouse_arr[i].W_YTD);
-	}
-    
-    return 0;  
-}  */

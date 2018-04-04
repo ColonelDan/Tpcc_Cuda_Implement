@@ -68,7 +68,7 @@ int get_item(struct item *p_item_arr){ //?????????????????????????????????
       //if(i<20) printf("I_DATA: %s\n", p_item_arr[i-1].I_DATA);
       
       token=strtok(NULL, ",");
-     	free(record_arr[i]); 
+     	free(record_arr[i-1]); 
       //printf("!!!!!!!!!!!!!!!!\n%ld\n%s\n%s\n%s\n%s\n%s\n%s\n%lf\n%lf\n",item_arr[i].W_ID,item_arr[i].W_NAME,
 	  //		item_arr[i].W_STREET_1,item_arr[i].W_STREET_2,item_arr[i].W_CITY,item_arr[i].W_STATE,
 	  //		item_arr[i].W_ZIP,item_arr[i].W_TAX,item_arr[i].W_YTD);

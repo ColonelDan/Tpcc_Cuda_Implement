@@ -151,6 +151,7 @@ struct order_line
 	long OL_DELIVERY_D;
 	double OL_QUANTITY;
 	double OL_AMOUNT;
+	char OL_DIST_INFO[25];
 };
 
 // define item.
@@ -182,6 +183,7 @@ struct stock
 	double S_YTD;
 	double S_ORDER_CNT;
 	double S_REMOTE_CNT;
+	char S_DATA[51];
 };
 
 
