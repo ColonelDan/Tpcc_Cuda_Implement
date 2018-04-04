@@ -90,170 +90,69 @@ __device__ struct order_line *d_orderlines;
 __device__ struct item *d_items;
 __device__ struct stock *d_stocks;
 
-
-__global__
-void test_table_scan(){
-	printf("into test tabel scan!\n");
-	
-	int rid = 0;
-	struct item *tmp_item;
-	//long offset = (unsigned int)&tmp_item.I_ID - (unsigned int)&tmp_item.I_ID;
-	//long offset = 0;
-
-	//struct  *dist_tmp;
-	//char tmp_zip[10]="292511111";
-	//printf("%s\n", tmp_zip);
-	for(int i= 0; i<20; i++){
-		tmp_item = &d_items[i];
-		printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
-	}
-
-
-	rid = table_scan(ITEM, LONG, 0, 0, NO, NULL, rid);
-	while(rid != -1){
-		if(rid > 20)
-				break;
-		printf("rid\t%d\t:", rid);
-		tmp_item =(struct item *)get(ITEM, rid);
-		//d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
-		
-		//test!!!!!!!!!!!!!
-		printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
-
-		rid = table_scan(ITEM, LONG, 0, 0, NO, NULL, rid+1);
-	}
-	printf("finish test tabel scan!\n");
-
-}
-
-__global__
-void test_scan_item(){
-	printf("into test scan items\n");
-
-	int rid = 0;
-	struct item *tmp_item;
-	for(int i= 1; i<10; i++){
-			long value = i;
-			rid = table_scan(ITEM, LONG, 0, 0, EQ, &value, 0);
-			tmp_item = (struct item *)get(ITEM, rid);
-			printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
-			//table_scan(ITEM, LONG， 0， 0， NO，&value， rid+1);
-	}
-}
-
-//void insert_rec(int table_type, void *record)
-__global__
-void test_insert(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
-	printf("into test insert!\n");
-	d_warehouses = h_d_warehouses;
-	d_warehouses_flag = h_d_warehouses_flag;
-	
-	struct warehouse new_rec={5,"huangxiang","asdasdas","asdas","hefei","sd","7854sda",25.3,10.56};
-	insert_rec(WAREHOUSE,&new_rec);
-	printf("finish test insert!\n");
-}
-
-//void update(int table_type, int record_id, void *record);
-__global__
-void test_update(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
-	printf("into test update!\n");
-	d_warehouses = h_d_warehouses;
-	d_warehouses_flag = h_d_warehouses_flag;
-	
-	struct warehouse update_rec={4,"xsw","asdasdas","asdas","hefei","sd","7854sda",25.3,10.56};
-	update(WAREHOUSE,1,&update_rec);
-	printf("finish test update!\n");
-}
-
-//void delete_rec(int table_type, int record_id);
-__global__
-void test_delete(struct warehouse *h_d_warehouses, char *h_d_warehouses_flag){
-	printf("into test delete!\n");
-	d_warehouses = h_d_warehouses;
-	d_warehouses_flag = h_d_warehouses_flag;
-	
-	delete_rec(WAREHOUSE,1);
-	delete_rec(WAREHOUSE,3);
-	printf("finish test delete!\n");
-}
-
-
-void cp_data_to_dev();
-
 __global__
 void cp_table_to_device(
 	struct warehouse *h_d_warehouses,
 	struct district *h_d_districts,
 	struct customer *h_d_customers,
-	struct order *h_d_orders,
+	struct history *h_d_historys,
 	struct new_order *h_d_new_orders,
+	struct order *h_d_orders,
 	struct order_line *h_d_orderlines,
 	struct item *h_d_items,
-	struct stock *h_d_stocks,
-	struct history *h_d_historys);
+	struct stock *h_d_stocks);
 
 __global__
 void cp_flag_to_device(
 	char *h_d_warehouses_flag,
 	char *h_d_districts_flag,
+	char *h_d_customers_flag,
+	char *h_d_historys_flag,
+	char *h_d_new_orders_flag,
 	char *h_d_orders_flag,
 	char *h_d_orderlines_flag,
-	char *h_d_new_orders,
-	char *h_d_orders,
-	char *h_d_customers_flag,
-	char *h_d_stocks_flag,
-	char *h_d_historys_flag);
+	char *h_d_items_flag,
+	char *h_d_stocks_flag);
 
 __global__
 void transaction_process(){
 	printf("into kernel !\n");
 	
-	tx_stock_level();
+	//tx_stock_level();
+	tx_new_order();
 }
 
 void load_data();
-
+void cp_data_to_dev();
 
 int main(int argc, char **argv){
 	load_data();
 	printf("load data succeed!\n");
 
-	// test
-	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_insert<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_update<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_delete<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
-	// test_table_scan<<<1, 1>>>(h_d_warehouses, h_d_warehouses_flag);
- 
-	
-	//test_table_scan<<<1, 1>>>(h_d_districts, h_d_districts_flag);
 	cp_data_to_dev();
 
 	cp_table_to_device<<<1, 1>>>(
 			h_d_warehouses,
 			h_d_districts,
 			h_d_customers,
-			h_d_orders,
+			h_d_historys,
 			h_d_new_orders,
+			h_d_orders,
 			h_d_orderlines,
 			h_d_items,
-			h_d_stocks,
-			h_d_historys);
+			h_d_stocks);
 
 	cp_flag_to_device<<<1, 1>>>(
 			h_d_warehouses_flag,
 			h_d_districts_flag,
+			h_d_customers_flag,
+			h_d_historys_flag,
+			h_d_new_orders_flag,
 			h_d_orders_flag,
 			h_d_orderlines_flag,
-			h_d_new_orders_flag,
 			h_d_items_flag,
-			h_d_customers_flag,
-			h_d_stocks_flag,
-			h_d_historys_flag);
+			h_d_stocks_flag);
 
-	//test_table_scan<<<1, 1>>>();
 	transaction_process<<<1, 1>>>();
 	
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
@@ -261,77 +160,50 @@ int main(int argc, char **argv){
 	return 0;
 }
 
-//void cp_data_to_dev(){
-	
-//}
-
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
-		
-
-//		printf("load warehouse succeed.\n");		
-
 
 		int stock_num = get_stock(h_stocks);
 		for( i = 0; i<stock_num ; i++){
 			h_stocks_flag[i] = 1;
 		}
 
-
-//		printf("load stock succeed.\n");		
-
 		int district_num = get_district(h_districts);
 		for( i = 0; i<district_num ; i++){
 			h_districts_flag[i] = 1;
 		}
 
-
-//		printf("load district succeed.\n");		
-		
 		int customer_num = get_customer(h_customers);
 		for( i = 0; i<customer_num ; i++){
 			h_customers_flag[i] = 1;
 		}
-//		printf("load customer succeed.\n");		
 
-			
 		int new_order_num = get_new_order(h_neworders);
 		for( i = 0; i<new_order_num ; i++){
 			h_neworders_flag[i] = 1;
 		}
-//		printf("load new_order succeed.\n");	
 
-
-		
 		int order_num = get_order(h_orders);
 		for( i = 0; i<order_num ; i++){
 			h_orders_flag[i] = 1;
 		}
-//		printf("load order_num succeed.\n");		
 
-
-	
 		int order_line_num = get_order_line(h_orderlines);
 		for( i = 0; i<order_line_num ; i++){
 			h_orderlines_flag[i] = 1;
 		}
-//		printf("load order_line succeed.\n");	
 
-
-		
 		int item_num = get_item(h_items);
 		for( i = 0; i<item_num ; i++){
 			h_items_flag[i] = 1;
-		}		
-//		printf("load item succeed.\n");	
+		}
+
 		int history_num = get_history(h_historys);
 		for( i = 0; i<history_num ; i++){
 			h_historys_flag[i] = 1;
 		}
-//		printf("load history succeed.\n");		
 
-		
 }
 
 void cp_data_to_dev(){
@@ -383,43 +255,43 @@ void cp_table_to_device(
 	struct warehouse *h_d_warehouses,
 	struct district *h_d_districts,
 	struct customer *h_d_customers,
-	struct order *h_d_orders,
+	struct history *h_d_historys,
 	struct new_order *h_d_new_orders,
+	struct order *h_d_orders,
 	struct order_line *h_d_orderlines,
 	struct item *h_d_items,
-	struct stock *h_d_stocks,
-	struct history *h_d_historys){
-	printf("cp tabel to device\n");
+	struct stock *h_d_stocks){
+
 	d_warehouses = h_d_warehouses;
 	d_districts = h_d_districts;
 	d_customers = h_d_customers;
-	d_orders = h_d_orders;
+	d_historys = h_d_historys;
 	d_new_orders = h_d_new_orders;
+	d_orders = h_d_orders;
 	d_orderlines = h_d_orderlines;
 	d_items = h_d_items;
 	d_stocks = h_d_stocks;
-	d_historys = h_d_historys;
 }
 
 __global__
 void cp_flag_to_device(
 	char *h_d_warehouses_flag,
 	char *h_d_districts_flag,
+	char *h_d_customers_flag,
+	char *h_d_historys_flag,
+	char *h_d_new_orders_flag,
 	char *h_d_orders_flag,
 	char *h_d_orderlines_flag,
-	char *h_d_new_orders_flag,
 	char *h_d_items_flag,
-	char *h_d_customers_flag,
-	char *h_d_stocks_flag,
-	char *h_d_historys_flag){
-	printf("cp flag to device\n");
-	    	d_warehouses_flag =   h_d_warehouses_flag;
-	    	d_districts_flag = h_d_districts_flag;
-	    	d_orders_flag = h_d_orders_flag;
-	    	d_orderlines_flag = h_d_orderlines_flag;
-	    	d_new_orders_flag = h_d_new_orders_flag;
-	    	d_items_flag = h_d_items_flag;
-	    	d_customers_flag = h_d_customers_flag;
-	    	d_stocks_flag = h_d_stocks_flag;
-	    	d_historys_flag = h_d_historys_flag;
+	char *h_d_stocks_flag){
+
+	d_warehouses_flag = h_d_warehouses_flag;
+	d_districts_flag = h_d_districts_flag;
+	d_customers_flag = h_d_customers_flag;
+	d_historys_flag = h_d_historys_flag;
+	d_new_orders_flag = h_d_new_orders_flag;
+	d_orders_flag = h_d_orders_flag;
+	d_orderlines_flag = h_d_orderlines_flag;
+	d_items_flag = h_d_items_flag;
+	d_stocks_flag = h_d_stocks_flag;
 }
