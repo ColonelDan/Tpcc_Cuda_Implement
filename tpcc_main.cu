@@ -208,7 +208,7 @@ __global__
 void transaction_process(){
 	printf("into kernel !\n");
 	
-	stock_level();
+	tx_stock_level();
 }
 
 void load_data();
