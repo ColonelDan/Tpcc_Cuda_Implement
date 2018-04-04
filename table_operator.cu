@@ -87,7 +87,7 @@ void delete_rec(int table_type, int record_id){
 }
 
 __device__
-void insert_rec(int table_type, void *record){
+int insert_rec(int table_type, void *record){
 	int record_size = 0;
 	int slot_id = -1;
 	const int bid = blockIdx.x;
@@ -101,6 +101,7 @@ void insert_rec(int table_type, void *record){
 		slot_id = get_free_slot(flag_head, table_type);
 		d_memcpy( table_head+slot_id*record_size, record, record_size);
 		mark_slot_used(flag_head, slot_id);
+			return slot_id;
 	}
 }
 
@@ -376,7 +377,7 @@ void get_record_size(int table_type, int *record_size){
 			*record_size = sizeof(struct district);
 			break;
 		case(ITEM):
-			*record_size = sizeof(struct customer);
+			*record_size = sizeof(struct item);
 			break;
 		case(NEW_ORDER):
 			*record_size = sizeof(struct new_order);

@@ -8,7 +8,7 @@
 #define TABLE_OPERATOR_H
 
 __device__
-void insert_rec(int table_type, void *record);
+int insert_rec(int table_type, void *record);
 
 __device__
 void delete_rec(int table_type, int record_id);

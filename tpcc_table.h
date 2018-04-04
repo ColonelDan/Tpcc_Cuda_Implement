@@ -182,8 +182,70 @@ struct stock
 	double S_YTD;
 	double S_ORDER_CNT;
 	double S_REMOTE_CNT;
-
 };
+
+
+//get 9 tables.
+extern struct warehouse h_warehouses[MAX_WAREHOUSE_NUM];
+extern struct district h_districts[MAX_DISTRICT_NUM];
+extern struct customer h_customers[MAX_CUSTOMER_NUM];
+extern struct history h_historys[MAX_HISTORY_NUM];
+extern struct new_order h_neworders[MAX_NEWORDER_NUM];
+extern struct order h_orders[MAX_ORDER_NUM];
+extern struct order_line h_orderlines[MAX_ORDER_LINE_NUM];
+extern struct stock h_stocks[MAX_STOCK_NUM];
+extern struct item h_items[MAX_ITEM_NUM];
+
+//tables's slot flag, mark the slot is used or not.
+extern char  h_warehouses_flag[MAX_WAREHOUSE_NUM];
+extern char  h_districts_flag[MAX_DISTRICT_NUM];
+extern char  h_customers_flag[MAX_CUSTOMER_NUM];
+extern char  h_historys_flag[MAX_HISTORY_NUM];
+extern char  h_neworders_flag[MAX_NEWORDER_NUM];
+extern char  h_orders_flag[MAX_ORDER_NUM];
+extern char  h_orderlines_flag[MAX_ORDER_LINE_NUM];
+extern char  h_items_flag[MAX_ITEM_NUM];
+extern char  h_stocks_flag[MAX_STOCK_NUM];
+
+extern struct warehouse *h_d_warehouses;
+extern struct district *h_d_districts;
+extern struct customer *h_d_customers;
+extern struct history *h_d_historys;
+extern struct new_order *h_d_new_orders;
+extern struct order *h_d_orders;
+extern struct order_line *h_d_orderlines;
+extern struct item *h_d_items;
+extern struct stock *h_d_stocks;
+ 
+ extern char *h_d_warehouses_flag;
+ extern char *h_d_districts_flag;
+ extern char *h_d_customers_flag;
+ extern char *h_d_historys_flag;
+ extern char *h_d_new_orders_flag;
+ extern char *h_d_orders_flag;
+ extern char *h_d_orderlines_flag;
+ extern char *h_d_items_flag;
+ extern char *h_d_stocks_flag;
+
+ extern __device__ char *d_warehouses_flag;
+ extern __device__ char *d_districts_flag;
+ extern __device__ char *d_customers_flag;
+ extern __device__ char *d_historys_flag;
+ extern __device__ char *d_new_orders_flag;
+ extern __device__ char *d_orders_flag;
+ extern __device__ char *d_orderlines_flag;
+ extern __device__ char *d_items_flag;
+ extern __device__ char *d_stocks_flag;
+ extern __device__ struct warehouse *d_warehouses;
+ extern __device__ struct district *d_districts;
+ extern __device__ struct customer *d_customers;
+ extern __device__ struct history *d_historys;
+ extern __device__ struct new_order *d_new_orders;
+ extern __device__ struct order *d_orders;
+ extern __device__ struct order_line *d_orderlines;
+ extern __device__ struct item *d_items;
+ extern __device__ struct stock *d_stocks;
+//
 
 __device__
 int get_free_slot(char *slot_flag_arry, int table_type);

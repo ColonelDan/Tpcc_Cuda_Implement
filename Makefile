@@ -16,10 +16,11 @@ all: main
 
 main : 	c_warehouse.o c_stock.o tpcc_main.o c_district.o c_customer.o \
 	c_new_order.o c_order.o c_order_line.o c_item.o c_history.o tpcc_table.o utility.o\
-	table_operator.o
+	table_operator.o tx_stock_level.o
 	$(CC) -G -g -o $@ c_warehouse.o c_stock.o c_district.o c_customer.o \
 			c_new_order.o c_order.o c_order_line.o c_item.o c_history.o \
-			tpcc_table.o tpcc_main.o utility.o table_operator.o
+			tpcc_table.o tpcc_main.o utility.o table_operator.o \
+			tx_stock_level.o
 			
 
 tpcc_main.o : tpcc_main.cu
@@ -59,6 +60,9 @@ utility.o : utility.cu
 	$(CC) $(DEBUG_CC_FLAGS) -c $<
 	
 table_operator.o : table_operator.cu
+	$(CC) $(DEBUG_CC_FLAGS) -c $<
+
+tx_stock_level.o : tx_stock_level.cu
 	$(CC) $(DEBUG_CC_FLAGS) -c $<
 
 .PHONY : clean

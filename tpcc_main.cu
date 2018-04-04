@@ -16,6 +16,7 @@
 #include "tpcc_table.h"
 #include "utility.h"
 #include "table_operator.h"
+#include "tx.h"
 
 int get_item(struct item *item_arr);
 int get_warehouse(struct warehouse *warehouse_arr);
@@ -91,35 +92,53 @@ __device__ struct stock *d_stocks;
 
 
 __global__
-void test_table_scan(struct district *h_d_districts, char *h_d_districts_flag){
+void test_table_scan(){
 	printf("into test tabel scan!\n");
-	d_districts = h_d_districts;
-	d_districts_flag = h_d_districts_flag;
 	
 	int rid = 0;
-	struct district tmp;
-	long offset = (unsigned int)&tmp.D_ZIP - (unsigned int)&tmp.D_ID;
+	struct item *tmp_item;
+	//long offset = (unsigned int)&tmp_item.I_ID - (unsigned int)&tmp_item.I_ID;
+	long offset = 0;
+
+	//struct  *dist_tmp;
+	//char tmp_zip[10]="292511111";
+	//printf("%s\n", tmp_zip);
+	for(int i= 0; i<20; i++){
+		tmp_item = &d_items[i];
+		printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
+	}
 
 
-	struct district *dist_tmp;
-	char tmp_zip[10]="292511111";
-	printf("%s\n", tmp_zip);
-
-	rid = table_scan(DISTRICT, STR, 10-1, offset, EQ, tmp_zip, rid);
+	rid = table_scan(ITEM, LONG, 0, 0, NO, NULL, rid);
 	while(rid != -1){
+		if(rid > 20)
+				break;
 		printf("rid\t%d\t:", rid);
-		dist_tmp =(struct district *)get(DISTRICT, rid);
+		tmp_item =(struct item *)get(ITEM, rid);
 		//d_memcpy((void *)&ware_tmp, result, sizeof(struct warehouse));
 		
 		//test!!!!!!!!!!!!!
-		printf("%ld, %ld, %s, %s, %s, %s, %s, %s, %lf, %lf, %ld\n",dist_tmp->D_ID, dist_tmp->D_W_ID,
-	  		dist_tmp->D_NAME, dist_tmp->D_STREET_1, dist_tmp->D_STREET_2, dist_tmp->D_CITY, dist_tmp->D_STATE,
-	  		dist_tmp->D_ZIP, dist_tmp->D_TAX, dist_tmp->D_YTD, dist_tmp->D_NEXT_O_ID);
-		
-		rid = table_scan(DISTRICT, STR, 10-1, offset, EQ, tmp_zip, rid+1);
+		printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
+
+		rid = table_scan(ITEM, LONG, 0, 0, NO, NULL, rid+1);
 	}
 	printf("finish test tabel scan!\n");
-	
+
+}
+
+__global__
+void test_scan_item(){
+	printf("into test scan items\n");
+
+	int rid = 0;
+	struct item *tmp_item;
+	for(int i= 1; i<10; i++){
+			long value = i;
+			rid = table_scan(ITEM, LONG, 0, 0, EQ, &value, 0);
+			tmp_item = (struct item *)get(ITEM, rid);
+			printf("I_ID : %ld, I_IM_ID : %ld, I_NAME : %s I_PRICE : %lf, I_DATA : %s\n", tmp_item->I_ID, tmp_item->I_IM_ID, tmp_item->I_NAME,tmp_item->I_PRICE, tmp_item->I_DATA);
+			//table_scan(ITEM, LONG， 0， 0， NO，&value， rid+1);
+	}
 }
 
 //void insert_rec(int table_type, void *record)
@@ -185,60 +204,6 @@ void cp_flag_to_device(
 	char *h_d_stocks_flag,
 	char *h_d_historys_flag);
 
-__device__
-void stock_level(){
-	printf("into stock_level\n");
-	// random function
-	curandState state;
-	int id = threadIdx.x;
-	long rand = 0;
-	long seed = rand;
-	curand_init(seed, id, 0, &state);
-	// for(int i = 0; i< 20 ; i++)
-	// {
-	// 	printf("rand : %u\n", curand(&state));
-	// }
-	
-	//generate parameters.
-	long W_ID = (long)(curand(&state)%3 + 1);
-	long D_W_ID;
-	long D_ID;
-	unsigned int limit;
-
-	int rid = (int)curand(&state)%30;
-	printf("rid = %d\n", rid);
-	rid = table_scan(DISTRICT, LONG, 0, 0, NO, NULL, rid);
-	printf("ok\n");
-	struct district tmp_district;
-	void *content = get(DISTRICT, rid);
-	d_memcpy(&tmp_district, content, sizeof(struct district));
-	D_W_ID = tmp_district.D_W_ID;
-	D_ID = tmp_district.D_ID;
-	limit = curand(&state);
-
-	printf("****** stock_level ******\nparameters:\n W_ID : %ld\n D_W_ID : %ld\n D_ID : %ld\n limit : %u\n", W_ID, D_W_ID, D_ID, limit);
-
-	int offset_D_W_ID = (unsigned int)&tmp_district.D_W_ID - (unsigned int)&tmp_district.D_ID;
-	int offset_D_ID = 0;
-	int rid1 = table_scan(DISTRICT, LONG, 0, offset_D_W_ID, EQ, &W_ID, 0);
-	int rid2;
-	while( rid1 != -1){
-		rid2 = table_scan(DISTRICT, LONG, 0, offset_D_ID, EQ, &D_ID, rid);
-		if(rid1 == rid2)
-			break;
-		rid1 = table_scan(DISTRICT, LONG, 0, offset_D_W_ID, EQ, &W_ID, rid1+1);
-	}
-
-	content = get(DISTRICT, rid1);
-	d_memcpy(&tmp_district, content, sizeof(struct district));
-
-	long next_order_id = tmp_district.D_NEXT_O_ID;
-	printf("D_NEXT_ID : %ld\n", next_order_id);
-
-
-}
-
-
 __global__
 void transaction_process(){
 	printf("into kernel !\n");
@@ -288,8 +253,8 @@ int main(int argc, char **argv){
 			h_d_stocks_flag,
 			h_d_historys_flag);
 
-	
-	transaction_process<<<1, 1>>>();
+	test_table_scan<<<1, 1>>>();
+	//transaction_process<<<1, 1>>>();
 	
 	cudaMemcpy(h_warehouses_flag, h_d_warehouses_flag, sizeof(char)*MAX_WAREHOUSE_NUM, cudaMemcpyDeviceToHost);
 	

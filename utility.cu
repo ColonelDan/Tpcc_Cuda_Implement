@@ -1,10 +1,16 @@
 //
-//  	desc: tpcc benchmark implementation in GPU
+//  desc: tpcc benchmark implementation in GPU
 //	date: 2018-3-27
 //	author: Xie Shangwei
 //
+#include <time.h>
+
+#include <cuda_runtime.h>
+#include <curand_kernel.h>
 
 #include "utility.h"
+
+// is same to memcpy.
 __device__
 void  d_memcpy(void *des, void *src, int size){
 	int i ;
@@ -13,6 +19,8 @@ void  d_memcpy(void *des, void *src, int size){
 	} 
 }
 
+
+// is same to strcmp.
 __device__
 int d_strcmp(char *des, char *src){
 	int i=1;
@@ -26,10 +34,22 @@ int d_strcmp(char *des, char *src){
 	return i;
 }
 
+
+//get the des string length.
 __device__
 int d_strlen(char *des){
 	int i = 0;
 	while(des[i] != 0)
 		i++;
 	return i;
+}
+
+//generate randon number in [min, max)
+__device__
+unsigned int d_random(int min, int max){
+	curandState state;
+	int id = threadIdx.x;
+	time_t t = clock();
+	curand_init( (unsigned int)t, id, 0, &state);
+	return curand(&state)%(max-min)+min;
 }

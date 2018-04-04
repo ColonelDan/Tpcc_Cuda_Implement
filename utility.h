@@ -16,4 +16,7 @@ int d_strcmp(char *des, char *src);
 
 __device__
 int d_strlen(char *des);
+
+__device__
+unsigned int d_random(int min, int max);
 #endif
