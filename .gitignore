@@ -54,3 +54,4 @@ dkms.conf
 main
 .project
 .cproject
+.metadata/
