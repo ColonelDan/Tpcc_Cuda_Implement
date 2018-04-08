@@ -9,6 +9,7 @@
 #include "table_operator.h"
 
 //test for new-order transaction!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 __device__
 void tx_new_order(){
 	//输入的数据
@@ -33,7 +34,7 @@ void tx_new_order(){
 	//int table_scan(int table_type, int attr_type, int attr_size, int attr_offset, int op, void *value, int r_id);
 	rid_in_warehouses= table_scan(WAREHOUSE, LONG, sizeof(long int), ((long)&(warehouse_tmp.W_ID)-(long)&(warehouse_tmp)), EQ, &no_W_ID, rid_in_warehouses);	//扫描整张warehouses表找出W_ID为no_W_ID的记录号 
 	if(rid_in_warehouses==-1){	//warehouses中没有no_W_ID对应的记录 
-		printf("Transaction Exception:\tW_ID is not in warehouse table!\n");
+		printf("Transaction Exception:\tW_ID is not in warehouse table!");
 		return;
 	}
 	struct warehouse *p_warehouse_tmp =(struct warehouse *)get(WAREHOUSE, rid_in_warehouses);	//获取no_W_ID对应的记录
@@ -49,8 +50,8 @@ void tx_new_order(){
 	int rid_in_districts=0;
 	while(1){
 		rid_in_districts = table_scan(DISTRICT, LONG, sizeof(long int), ((long)&(district_tmp.D_W_ID)-(long)&(district_tmp.D_ID)), EQ, &no_D_W_ID, rid_in_districts);	//扫描整张districts表找出D_W_ID为no_D_W_ID的记录号
-		if(rid_in_districts == -1){	//warehouses中没有no_W_ID对应的记录 
-			printf("Transaction Exception:\tD_W_ID is not in district table!\n");
+		if(rid_in_districts == -1){	//districts中没有no_D_W_ID对应的记录 
+			printf("Transaction Exception:\tD_W_ID is not in district table!");
 			return;
 		}
 		p_district_tmp=(struct district *)get(DISTRICT, rid_in_districts);	//获取no_D_W_ID对应的记录

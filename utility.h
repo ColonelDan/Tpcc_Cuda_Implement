@@ -18,5 +18,11 @@ __device__
 int d_strlen(char *des);
 
 __device__
+void d_str_append(char *str1,char *str2,int limit);
+
+__device__
+void d_ltoa(long n,char *s);
+
+__device__
 unsigned int d_random(int min, int max);
 #endif

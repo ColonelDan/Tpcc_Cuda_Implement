@@ -116,10 +116,9 @@ void cp_flag_to_device(
 
 __global__
 void transaction_process(){
-	printf("into kernel !\n");
-	
 	//tx_stock_level();
 	tx_new_order();
+	tx_payment();
 }
 
 void load_data();
@@ -127,7 +126,6 @@ void cp_data_to_dev();
 
 int main(int argc, char **argv){
 	load_data();
-	printf("load data succeed!\n");
 
 	cp_data_to_dev();
 
@@ -163,6 +161,9 @@ int main(int argc, char **argv){
 void load_data(){
 		int warehouse_num = get_warehouse(h_warehouses);
 		int i;
+		for(i = 0; i<warehouse_num ; i++){
+			h_warehouses_flag[i] = 1;
+		}
 
 		int stock_num = get_stock(h_stocks);
 		for( i = 0; i<stock_num ; i++){
@@ -203,7 +204,7 @@ void load_data(){
 		for( i = 0; i<history_num ; i++){
 			h_historys_flag[i] = 1;
 		}
-
+		printf("load data succeed!\n");
 }
 
 void cp_data_to_dev(){
