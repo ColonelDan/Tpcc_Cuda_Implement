@@ -119,6 +119,7 @@ void transaction_process(){
 	//tx_stock_level();
 	tx_new_order();
 	tx_payment();
+	tx_order_status();
 }
 
 void load_data();
