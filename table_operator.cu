@@ -328,6 +328,9 @@ void get_table_head(int table_type, void **table_head){
 		case(CUSTOMER):
 			*table_head = (void *)d_customers;
 			break;
+		case(HISTORY):
+			*table_head = (void *)d_historys;
+			break;
 	}
 
 }
@@ -360,6 +363,9 @@ void get_flag_head(int table_type, char **flag_head){
 		case(CUSTOMER):
 			*flag_head = d_customers_flag;
 			break;
+		case(HISTORY):
+			*flag_head = d_historys_flag;
+			break;
 	}
 }
 
@@ -391,6 +397,9 @@ void get_record_size(int table_type, int *record_size){
 		case(CUSTOMER):
 			*record_size = sizeof(struct customer);
 			break;
+		case(HISTORY):
+			*record_size = sizeof(struct history);
+			break;
 	}
 }
 
@@ -421,6 +430,9 @@ void get_table_size(int table_type, int *table_size){
 			break;
 		case(CUSTOMER):
 			*table_size = MAX_CUSTOMER_NUM;
+			break;
+		case(HISTORY):
+			*table_size = MAX_HISTORY_NUM;
 			break;
 	}
 }
