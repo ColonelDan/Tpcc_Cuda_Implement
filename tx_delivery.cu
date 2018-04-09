@@ -27,7 +27,6 @@ void tx_delivery(){
 
 	//generate parameters.
 	int rid = d_random(0, 20);
-	struct district tmp_district;
 	struct district *dis_p;
 	rid = table_scan(DISTRICT, LONG, 0, 0, NO, NULL, rid);
 
@@ -70,10 +69,9 @@ void tx_delivery(){
 	printf("NO_O_ID : %ld\n", NO_O_ID);
 	//return ;
 	// delete record in the new_order table.
-	struct order tmp_or;
 	struct order *or_p;
 	start_id = 0;
-	int offset_O_D_ID = (long)&tmp_or.O_D_ID - (long)&tmp_or.O_ID;
+	//int offset_O_D_ID = (long)&tmp_or.O_D_ID - (long)&tmp_or.O_ID;
 	rid = table_scan(ORDER, LONG, 0, 0, EQ, &NO_O_ID, start_id);
 	// printf("rid : %d\n", rid);
 	// 	or_p = (struct order *)get(ORDER, rid);
@@ -96,7 +94,7 @@ void tx_delivery(){
 		printf("there is no record in table order satisfy condition.\n");
 	long O_C_ID = or_p->O_C_ID;
 	printf("O_C_ID : %ld\n", O_C_ID);
-	int offse_O_CARRIER_ID = (long)&tmp_or.O_CARRIER_ID - (long)&tmp_or.O_ID;
+	//int offse_O_CARRIER_ID = (long)&tmp_or.O_CARRIER_ID - (long)&tmp_or.O_ID;
 	//d_memcpy((void *)or_p+offse_O_CARRIER_ID, &O_CARRIER_ID, sizeof(long));
 	or_p->O_CARRIER_ID = O_CARRIER_ID;
 	printf("after set , carrier id is : %ld\n", (struct order *)or_p->O_CARRIER_ID);
@@ -104,9 +102,8 @@ void tx_delivery(){
 
 	// next step operate in table order_line.
 	start_id = 0;
-	struct order_line tmp_orl;
 	struct order_line *orl_p;
-	int offset_OL_W_ID = (long)&tmp_orl.OL_W_ID - (long)&tmp_orl.OL_O_ID;
+	//int offset_OL_W_ID = (long)&tmp_orl.OL_W_ID - (long)&tmp_orl.OL_O_ID;
 	double sum_of_amout = 0;
 	rid = table_scan(ORDER_LINE, LONG, 0, 0, EQ, &NO_O_ID, start_id);
 	printf("order line rid = %ld\n", rid);
@@ -126,9 +123,8 @@ void tx_delivery(){
 	//return;
 
 	start_id = 0;
-	struct customer cus;
 	struct customer *cus_p;
-	int offset_C_W_ID = (long)&cus.C_W_ID - (long)&cus.C_ID;
+	//int offset_C_W_ID = (long)&cus.C_W_ID - (long)&cus.C_ID;
 	rid = table_scan(CUSTOMER, LONG, 0, 0, EQ, &O_C_ID, start_id);
 	//return;
 	while(rid != -1){
