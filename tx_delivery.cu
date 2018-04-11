@@ -18,7 +18,7 @@
 
 __device__
 void tx_delivery(){
-	printf("transaction : delivery.\n");
+	printf("********** transaction : delivery *********\n");
 
 	long D_ID;
 	long W_ID;
@@ -66,6 +66,7 @@ void tx_delivery(){
 	if(rid == -1)
 		printf("there is no new_order satisfy condition\n");
 	long NO_O_ID = no_p->NO_O_ID;
+	mark_slot_free(d_new_orders_flag, rid);
 	printf("NO_O_ID : %ld\n", NO_O_ID);
 	//return ;
 	// delete record in the new_order table.
@@ -141,5 +142,5 @@ void tx_delivery(){
 	if(rid == -1)
 		printf("there is no record satisfy condition.\n");
 	printf("customer id : %d\n", rid);
-	printf("delivery process over!\n");
+	printf("********* delivery process over! *********\n");
 }
